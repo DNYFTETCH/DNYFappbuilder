@@ -1,0 +1,86 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-cli:
+    name: Test CLI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ABP
+        run: |
+          chmod +x setup.sh
+          ABP_ROOT=$HOME/dnyf-appbuilder ./setup.sh --ci
+
+      - name: Test CLI commands
+        run: |
+          source ~/.bashrc || true
+          export PATH="$PATH:$HOME/dnyf-appbuilder/bin"
+          abp version
+          abp help
+          abp doctor
+
+      - name: Run unit tests
+        run: |
+          export ABP_ROOT=$HOME/dnyf-appbuilder
+          bash tests/run-tests.sh
+
+  build-nodejs:
+    name: Build Node.js Example
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: examples/nodejs-api/package-lock.json
+
+      - name: Install ABP
+        run: |
+          chmod +x setup.sh
+          ABP_ROOT=$HOME/dnyf-appbuilder ./setup.sh --ci
+
+      - name: Build Node.js example
+        run: |
+          export PATH="$PATH:$HOME/dnyf-appbuilder/bin"
+          abp build examples/nodejs-api
+
+  build-python:
+    name: Build Python Example
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install ABP
+        run: |
+          chmod +x setup.sh
+          ABP_ROOT=$HOME/dnyf-appbuilder ./setup.sh --ci
+
+      - name: Build Python example
+        run: |
+          export PATH="$PATH:$HOME/dnyf-appbuilder/bin"
+          abp build examples/python-api
+
+  build-docker:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Node.js Docker image
+        run: docker build -f docker/nodejs.Dockerfile -t abp-nodejs:test .
+
+      - name: Build Python Docker image
+        run: docker build -f docker/python.Dockerfile -t abp-python:test .

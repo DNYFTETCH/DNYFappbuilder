@@ -1,0 +1,66 @@
+{
+  "version": "2.0.0",
+  "build": {
+    "outputDir": "~/dnyf-appbuilder/builds",
+    "cacheDir": "~/dnyf-appbuilder/.cache",
+    "parallel": true,
+    "maxWorkers": 4,
+    "defaultProfile": "release",
+    "defaultTarget": "android"
+  },
+  "signing": {
+    "keystore": "~/dnyf-appbuilder/config/dnyf-release.keystore",
+    "alias": "abp-key",
+    "password": "dnyf-release-2024"
+  },
+  "docker": {
+    "enabled": true,
+    "registry": "ghcr.io",
+    "namespace": "dnyftech"
+  },
+  "deploy": {
+    "defaultTarget": "railway",
+    "render": { "region": "frankfurt" },
+    "railway": { "region": "us-west1" }
+  },
+  "notifications": {
+    "enabled": true,
+    "termux": true,
+    "slack_webhook": "",
+    "custom_webhook": ""
+  },
+  "languages": {
+    "javascript": {
+      "enabled": true,
+      "packageManager": "npm",
+      "frameworks": ["react-native", "nodejs", "react", "vue", "nextjs", "angular"]
+    },
+    "python": {
+      "enabled": true,
+      "frameworks": ["fastapi", "flask", "django"]
+    },
+    "java": {
+      "enabled": true,
+      "frameworks": ["android", "spring-boot"]
+    },
+    "flutter": {
+      "enabled": true,
+      "platforms": ["android", "ios", "web"]
+    },
+    "kotlin": {
+      "enabled": true,
+      "frameworks": ["android"]
+    }
+  },
+  "adb": {
+    "defaultPort": 5555,
+    "timeout": 30,
+    "retries": 3
+  },
+  "logging": {
+    "level": "info",
+    "file": "~/dnyf-appbuilder/logs/build.log",
+    "maxSize": "10MB",
+    "maxFiles": 5
+  }
+}

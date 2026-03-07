@@ -1,0 +1,69 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Create release tarball
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          tar --exclude='.git' \
+              --exclude='*.log' \
+              --exclude='builds/*' \
+              --exclude='.cache/*' \
+              -czf "dnyf-appbuilder-${VERSION}.tar.gz" \
+              -C .. dnyf-appbuilder/
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+          if [[ -n "$PREV_TAG" ]]; then
+            echo "CHANGES<<EOF" >> $GITHUB_OUTPUT
+            git log "$PREV_TAG"..HEAD --pretty=format:"- %s" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "CHANGES=Initial release" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "DNYFappbuilder ${{ steps.version.outputs.VERSION }}"
+          body: |
+            ## What's Changed
+
+            ${{ steps.changelog.outputs.CHANGES }}
+
+            ## Installation
+
+            ```bash
+            # Quick install
+            curl -fsSL https://raw.githubusercontent.com/DNYFTECH/dnyf-appbuilder/main/setup.sh | bash
+
+            # Or download tarball
+            wget https://github.com/DNYFTECH/dnyf-appbuilder/releases/download/${{ steps.version.outputs.VERSION }}/dnyf-appbuilder-${{ steps.version.outputs.VERSION }}.tar.gz
+            tar -xzf dnyf-appbuilder-*.tar.gz
+            cd dnyf-appbuilder && ./setup.sh
+            ```
+          files: "dnyf-appbuilder-${{ steps.version.outputs.VERSION }}.tar.gz"
+          draft: false
+          prerelease: false
