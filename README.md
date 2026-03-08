@@ -1,163 +1,150 @@
 # DNYFappbuilder v2.0.0
 
+[![Build & Test](https://github.com/DNYFTECH/DNYFappbuilder/actions/workflows/build.yml/badge.svg)](https://github.com/DNYFTECH/DNYFappbuilder/actions/workflows/build.yml)
+[![Release](https://github.com/DNYFTECH/DNYFappbuilder/actions/workflows/release.yml/badge.svg)](https://github.com/DNYFTECH/DNYFappbuilder/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Termux-brightgreen)](#)
+[![Made by DNYFTECH](https://img.shields.io/badge/made%20by-DNYFTECH-6C63FF)](https://github.com/DNYFTECH)
+
 > **Production-grade multi-language build system with device installation**
 >
-> Build → Sign → Install → Deploy — all from one CLI
-
-[![Build](https://github.com/DNYFTECH/dnyf-appbuilder/actions/workflows/build.yml/badge.svg)](https://github.com/DNYFTECH/dnyf-appbuilder/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+> Build → Sign → Install → Deploy — all from one CLI, including Termux on Android
 
 ---
 
-## What's New in v2.0.0
-
-- **Device Installation** — Install APKs/IPAs directly to connected devices
-- **Wireless Install** — Install via WiFi ADB (no USB required)
-- **QR Code Install** — Serve APK as QR code for instant device install
-- **Multi-Device** — Install to all connected devices in one command
-- **APK Signing** — Built-in keystore management and APK signing
-- **Doctor command** — Full environment health check
-- **Deploy to Render, Railway, Vercel, Heroku, Docker**
-- **Environment profiles** — Manage dev/staging/production `.env` files
-- **Termux optimized** — Full support for Termux on Android
-- **Self-update** — `abp update` pulls latest version from GitHub
-
----
-
-## Quick Install
+## Install
 
 ```bash
-git clone https://github.com/DNYFTECH/dnyf-appbuilder.git
-cd dnyf-appbuilder
-chmod +x setup.sh && ./setup.sh
+# One-liner (Linux / macOS / Termux)
+curl -fsSL https://raw.githubusercontent.com/DNYFTECH/DNYFappbuilder/main/install.sh | bash
+
+# Or manually
+git clone https://github.com/DNYFTECH/DNYFappbuilder.git ~/dnyf-appbuilder
+cd ~/dnyf-appbuilder && ./setup.sh
 source ~/.bashrc
+```
+
+**Termux (Android)**
+```bash
+pkg install git curl
+curl -fsSL https://raw.githubusercontent.com/DNYFTECH/DNYFappbuilder/main/install.sh | bash
+```
+
+After install, verify:
+```bash
 abp doctor
 ```
 
 ---
 
-## Usage
+## Quick Start
 
-### Create a Project
 ```bash
-abp init myapp react-native
 abp init myapp flutter
-abp init myapp nodejs
-abp init myapp python
-abp init myapp android
+abp build myapp --target android --profile release --sign --install
 ```
 
-### Build
+---
+
+## Commands
+
+### Project
 ```bash
-abp build .                                       # Auto-detect, default target
-abp build . --target android                      # Android APK
-abp build . --target android --profile release    # Release build
-abp build . --target all --parallel               # All targets, parallel
-abp build . --target android --sign --install     # Build + sign + install
-abp build . --notify                              # Notify when done
+abp init <name> <template>        # Create project
+abp build <path> [options]        # Build app
+abp clean                         # Clear cache
 ```
 
-### Device Management
+### Device Installation
 ```bash
-abp devices                    # List all connected devices
-abp devices --wireless         # Enable wireless ADB
-abp devices --connect 192.168.1.10  # Connect to WiFi device
+abp devices                       # List connected devices
+abp install app.apk               # Install to device
+abp install app.apk --all         # Install to all devices
+abp install app.apk --wireless <ip>  # WiFi install (no USB)
+abp install app.apk --qr          # QR code wireless install
+abp uninstall com.my.app          # Remove from device
+abp screenshot                    # Capture device screen
+abp logcat                        # Stream device logs
 ```
 
-### Install Apps on Devices
+### Signing
 ```bash
-abp install app.apk                          # Auto-select device
-abp install app.apk --all                   # All connected devices
-abp install app.apk --device emulator-5554  # Specific device
-abp install app.apk --wireless 192.168.1.10 # Via WiFi ADB
-abp install app.apk --qr                    # QR code (scan on device)
-abp install app.apk --verify --package com.myapp  # Verify after install
-```
-
-### APK Signing
-```bash
-abp keygen                          # Generate release keystore
-abp sign app.apk --auto             # Auto-sign (generates keystore if needed)
-abp sign app.apk --keystore my.jks --alias mykey
-abp verify-sign app.apk             # Verify signature
+abp keygen                        # Generate release keystore
+abp sign app.apk --auto           # Sign APK
+abp verify-sign app.apk           # Verify signature
 ```
 
 ### Deploy
 ```bash
-abp deploy render
-abp deploy railway
-abp deploy vercel
-abp deploy heroku
-abp deploy docker ghcr.io/dnyftech/myapp:latest
-abp deploy github-pages
+abp deploy render                 # Deploy to Render
+abp deploy railway                # Deploy to Railway
+abp deploy vercel                 # Deploy to Vercel
+abp deploy heroku                 # Deploy to Heroku
+abp deploy docker <image>         # Push Docker image
+abp deploy github-pages           # Deploy to GitHub Pages
 ```
 
 ### Utilities
 ```bash
-abp doctor                    # Environment health check
-abp logs                      # View build logs
-abp logs --tail 100           # Last 100 lines
-abp env create production     # Create env profile
-abp env apply production      # Apply to current dir
-abp plugins list              # List installed plugins
-abp update                    # Self-update
-abp screenshot                # Screenshot from device
-abp logcat                    # Stream device logs
-abp uninstall com.my.app      # Uninstall from device
+abp doctor                        # Environment health check
+abp logs                          # View build logs
+abp env create production         # Manage .env profiles
+abp plugins list                  # List plugins
+abp update                        # Self-update
 ```
 
----
-
-## Supported Templates
-
-| Template | Language | Targets |
-|---|---|---|
-| `react-native` | JavaScript/TypeScript | Android, iOS |
-| `flutter` | Dart | Android, iOS, Web |
-| `android` | Kotlin | Android |
-| `nodejs` | JavaScript | Server |
-| `python` | Python (FastAPI) | Server |
-| `java` | Java (Spring Boot) | Server |
-| `react` | JavaScript (Vite) | Web |
-| `vue` | JavaScript (Vite) | Web |
-
----
-
-## Termux Setup
-
+### Build Options
 ```bash
-# Install required tools
-pkg update
-pkg install android-tools git nodejs python openjdk-17 qrencode
-
-# Install DNYFappbuilder
-git clone https://github.com/DNYFTECH/dnyf-appbuilder.git
-cd dnyf-appbuilder && ./setup.sh
-source ~/.bashrc
-
-# Connect device and install
-abp devices
-abp install myapp.apk --all
+--target android|ios|web|all
+--profile debug|release|staging
+--parallel          # Build all targets simultaneously
+--sign              # Auto-sign after build
+--install           # Install to device after build
+--notify            # Push notification when done
+--no-cache          # Skip build cache
 ```
 
 ---
 
-## Plugins
+## Templates
 
-| Plugin | Description |
-|---|---|
-| `gradle-optimizer` | Injects Gradle performance optimizations |
-| `npm-security` | npm audit and auto-fix |
-| `qr-installer` | QR code wireless APK distribution |
+| Template | Language | Output |
+|---|---|---|
+| `react-native` | TypeScript | Android APK / iOS IPA |
+| `flutter` | Dart | Android APK / iOS / Web |
+| `android` | Kotlin | Android APK |
+| `nodejs` | JavaScript | Node.js server |
+| `python` | Python | FastAPI server |
+| `java` | Java | Spring Boot JAR |
+| `react` | JavaScript | Vite web app |
+| `vue` | JavaScript | Vite web app |
 
 ---
 
-## Documentation
+## Examples
 
-- [Installation Guide](docs/installation.md)
-- [Quickstart](docs/quickstart.md)
-- [Device Installation Guide](docs/device-install.md)
-- [FAQ](docs/faq.md)
+```
+examples/
+├── nodejs-api/       Node.js Express API
+├── python-api/       Python FastAPI
+├── flutter-app/      Flutter cross-platform app
+└── react-native-app/ React Native mobile app
+```
+
+---
+
+## Requirements
+
+| Tool | Required | Install |
+|---|---|---|
+| `bash` | ✅ | Pre-installed |
+| `git` | ✅ | `pkg install git` |
+| `node` + `npm` | For JS projects | `pkg install nodejs` |
+| `python3` | For Python projects | `pkg install python` |
+| `java` (JDK 17) | For Android/Java | `pkg install openjdk-17` |
+| `flutter` | For Flutter | [flutter.dev](https://flutter.dev) |
+| `adb` | For device install | `pkg install android-tools` |
+| `docker` | For Docker builds | [docker.com](https://docker.com) |
 
 ---
 

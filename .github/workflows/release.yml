@@ -22,26 +22,32 @@ jobs:
         id: version
         run: echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
 
-      - name: Create release tarball
+      - name: Create release archive
         run: |
           VERSION="${{ steps.version.outputs.VERSION }}"
           tar --exclude='.git' \
               --exclude='*.log' \
               --exclude='builds/*' \
               --exclude='.cache/*' \
-              -czf "dnyf-appbuilder-${VERSION}.tar.gz" \
-              -C .. dnyf-appbuilder/
+              -czf "DNYFappbuilder-${VERSION}.tar.gz" \
+              -C .. DNYFappbuilder/ 2>/dev/null || \
+          tar --exclude='.git' \
+              --exclude='*.log' \
+              -czf "DNYFappbuilder-${VERSION}.tar.gz" .
 
       - name: Generate changelog
         id: changelog
         run: |
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
           if [[ -n "$PREV_TAG" ]]; then
-            echo "CHANGES<<EOF" >> $GITHUB_OUTPUT
-            git log "$PREV_TAG"..HEAD --pretty=format:"- %s" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+            {
+              echo "CHANGES<<EOF"
+              git log "$PREV_TAG"..HEAD --pretty=format:"- %s"
+              echo ""
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
           else
-            echo "CHANGES=Initial release" >> $GITHUB_OUTPUT
+            echo "CHANGES=Initial release 🎉" >> $GITHUB_OUTPUT
           fi
 
       - name: Create GitHub Release
@@ -53,17 +59,30 @@ jobs:
 
             ${{ steps.changelog.outputs.CHANGES }}
 
-            ## Installation
+            ## Install
 
             ```bash
-            # Quick install
-            curl -fsSL https://raw.githubusercontent.com/DNYFTECH/dnyf-appbuilder/main/setup.sh | bash
+            # One-liner (recommended)
+            curl -fsSL https://raw.githubusercontent.com/DNYFTECH/DNYFappbuilder/main/install.sh | bash
 
-            # Or download tarball
-            wget https://github.com/DNYFTECH/dnyf-appbuilder/releases/download/${{ steps.version.outputs.VERSION }}/dnyf-appbuilder-${{ steps.version.outputs.VERSION }}.tar.gz
-            tar -xzf dnyf-appbuilder-*.tar.gz
-            cd dnyf-appbuilder && ./setup.sh
+            # Manual
+            git clone https://github.com/DNYFTECH/DNYFappbuilder.git ~/dnyf-appbuilder
+            cd ~/dnyf-appbuilder && ./setup.sh
+            source ~/.bashrc
             ```
-          files: "dnyf-appbuilder-${{ steps.version.outputs.VERSION }}.tar.gz"
+
+            ## Termux (Android)
+            ```bash
+            pkg install git
+            curl -fsSL https://raw.githubusercontent.com/DNYFTECH/DNYFappbuilder/main/install.sh | bash
+            ```
+
+            ## Quick Start
+            ```bash
+            abp doctor
+            abp init myapp flutter
+            abp build myapp --target android --sign --install
+            ```
+          files: "DNYFappbuilder-${{ steps.version.outputs.VERSION }}.tar.gz"
           draft: false
           prerelease: false
