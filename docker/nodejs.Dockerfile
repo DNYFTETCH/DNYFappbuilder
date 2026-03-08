@@ -1,13 +1,14 @@
 # DNYFappbuilder — Node.js Production Dockerfile
+# Usage (from repo root): docker build -f docker/nodejs.Dockerfile -t myapp .
+# Usage (from your project): docker build -t myapp .  (copy this file as Dockerfile)
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
-
-COPY . .
-RUN npm run build 2>/dev/null || true
+# Support both repo-root builds (CI) and project-level builds
+COPY examples/nodejs-api/package*.json ./
+RUN npm install --omit=dev && npm cache clean --force
+COPY examples/nodejs-api/ .
 
 # ── Production stage ──────────────────────────────────────
 FROM node:20-alpine AS production
@@ -17,8 +18,7 @@ RUN apk add --no-cache tini
 WORKDIR /app
 
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist 2>/dev/null || true
-COPY --from=builder /app/src ./src 2>/dev/null || true
+COPY --from=builder /app/src ./src
 COPY --from=builder /app/package.json ./
 
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001

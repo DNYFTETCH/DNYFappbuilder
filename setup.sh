@@ -18,12 +18,15 @@ CYAN='\e[1;36m'; MAGENTA='\e[1;35m'; BOLD='\e[1m'; RESET='\e[0m'
 # ── Parse flags ───────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --ci)          CI_MODE=true; shift ;;
-        --reinstall)   REINSTALL=true; shift ;;
-        --root)        ABP_ROOT="$2"; shift 2 ;;
+        --ci)          CI_MODE=true;    shift ;;
+        --reinstall)   REINSTALL=true;  shift ;;
+        --root)        ABP_ROOT="$2";   shift 2 ;;
         *) shift ;;
     esac
 done
+
+# In CI mode, always reinstall
+$CI_MODE && REINSTALL=true
 
 # ── Error handler ─────────────────────────────────────────
 trap 'echo -e "\n${RED}Setup failed at line $LINENO${RESET}"; exit 1' ERR
@@ -63,12 +66,17 @@ echo -e "${CYAN}[2/5] Installing files...${RESET}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [[ -d "$SCRIPT_DIR/bin" ]]; then
-    cp -r "$SCRIPT_DIR"/{bin,lib,scripts,docker,config,k8s} "$ABP_ROOT/" 2>/dev/null || true
-    # Copy plugins if exist
+    cp -r "$SCRIPT_DIR/bin" "$ABP_ROOT/"
+    cp -r "$SCRIPT_DIR/lib" "$ABP_ROOT/"
+    cp -r "$SCRIPT_DIR/scripts" "$ABP_ROOT/"
+    cp -r "$SCRIPT_DIR/docker" "$ABP_ROOT/"
+    cp -r "$SCRIPT_DIR/config" "$ABP_ROOT/"
+    cp -r "$SCRIPT_DIR/k8s" "$ABP_ROOT/"
     [[ -d "$SCRIPT_DIR/plugins" ]] && cp -r "$SCRIPT_DIR/plugins" "$ABP_ROOT/" || true
-    echo -e "${GREEN}✓ Files copied from local repo${RESET}"
+    echo -e "${GREEN}✓ Files copied from: $SCRIPT_DIR${RESET}"
 else
-    echo -e "${YELLOW}⚠ Local repo files not found — files must be present${RESET}"
+    echo -e "${RED}✗ Source directory not found: $SCRIPT_DIR${RESET}"
+    exit 1
 fi
 
 # ── Set permissions ───────────────────────────────────────

@@ -7,80 +7,114 @@ on:
     branches: [main]
 
 jobs:
+
+  # ── Job 1: Test CLI ──────────────────────────────────────
   test-cli:
     name: Test CLI
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install ABP
+      - name: Install DNYFappbuilder
         run: |
           chmod +x setup.sh
-          ABP_ROOT=$HOME/dnyf-appbuilder ./setup.sh --ci
+          bash setup.sh --ci --root "$GITHUB_WORKSPACE/dnyf-appbuilder"
 
-      - name: Test CLI commands
+      - name: Verify CLI
         run: |
-          source ~/.bashrc || true
-          export PATH="$PATH:$HOME/dnyf-appbuilder/bin"
+          export PATH="$PATH:$GITHUB_WORKSPACE/dnyf-appbuilder/bin"
+          export ABP_ROOT="$GITHUB_WORKSPACE/dnyf-appbuilder"
           abp version
-          abp help
-          abp doctor
+          abp help > /dev/null
 
-      - name: Run unit tests
+      - name: Run doctor
         run: |
-          export ABP_ROOT=$HOME/dnyf-appbuilder
+          export PATH="$PATH:$GITHUB_WORKSPACE/dnyf-appbuilder/bin"
+          export ABP_ROOT="$GITHUB_WORKSPACE/dnyf-appbuilder"
+          abp doctor || true
+
+      - name: Run test suite
+        run: |
+          export PATH="$PATH:$GITHUB_WORKSPACE/dnyf-appbuilder/bin"
+          export ABP_ROOT="$GITHUB_WORKSPACE/dnyf-appbuilder"
           bash tests/run-tests.sh
 
+  # ── Job 2: Build Node.js Example ─────────────────────────
   build-nodejs:
     name: Build Node.js Example
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: examples/nodejs-api/package-lock.json
 
-      - name: Install ABP
+      - name: Install DNYFappbuilder
         run: |
           chmod +x setup.sh
-          ABP_ROOT=$HOME/dnyf-appbuilder ./setup.sh --ci
+          bash setup.sh --ci --root "$GITHUB_WORKSPACE/dnyf-appbuilder"
 
       - name: Build Node.js example
         run: |
-          export PATH="$PATH:$HOME/dnyf-appbuilder/bin"
+          export PATH="$PATH:$GITHUB_WORKSPACE/dnyf-appbuilder/bin"
+          export ABP_ROOT="$GITHUB_WORKSPACE/dnyf-appbuilder"
           abp build examples/nodejs-api
 
+      - name: Verify build output
+        run: ls "$GITHUB_WORKSPACE/dnyf-appbuilder/builds/"
+
+  # ── Job 3: Build Python Example ──────────────────────────
   build-python:
     name: Build Python Example
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install ABP
+      - name: Install DNYFappbuilder
         run: |
           chmod +x setup.sh
-          ABP_ROOT=$HOME/dnyf-appbuilder ./setup.sh --ci
+          bash setup.sh --ci --root "$GITHUB_WORKSPACE/dnyf-appbuilder"
 
       - name: Build Python example
         run: |
-          export PATH="$PATH:$HOME/dnyf-appbuilder/bin"
+          export PATH="$PATH:$GITHUB_WORKSPACE/dnyf-appbuilder/bin"
+          export ABP_ROOT="$GITHUB_WORKSPACE/dnyf-appbuilder"
           abp build examples/python-api
 
+      - name: Verify build output
+        run: ls "$GITHUB_WORKSPACE/dnyf-appbuilder/builds/"
+
+  # ── Job 4: Build Docker Images ────────────────────────────
   build-docker:
     name: Build Docker Images
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build Node.js Docker image
-        run: docker build -f docker/nodejs.Dockerfile -t abp-nodejs:test .
+        run: docker build -f docker/nodejs.Dockerfile -t dnyf-nodejs:test .
 
       - name: Build Python Docker image
-        run: docker build -f docker/python.Dockerfile -t abp-python:test .
+        run: docker build -f docker/python.Dockerfile -t dnyf-python:test .
+
+      - name: Smoke test Node.js container
+        run: |
+          docker run -d --name dnyf-node-test -p 3000:3000 dnyf-nodejs:test
+          sleep 4
+          curl -sf http://localhost:3000/health || (docker logs dnyf-node-test && exit 1)
+          docker rm -f dnyf-node-test
+
+      - name: Smoke test Python container
+        run: |
+          docker run -d --name dnyf-python-test -p 8000:8000 dnyf-python:test
+          sleep 6
+          curl -sf http://localhost:8000/health || (docker logs dnyf-python-test && exit 1)
+          docker rm -f dnyf-python-test

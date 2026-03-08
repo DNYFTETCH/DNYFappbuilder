@@ -1,0 +1,17 @@
+{
+  "name": "nodejs-api-example",
+  "version": "1.0.0",
+  "description": "DNYFappbuilder Node.js example API",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node src/index.js",
+    "build": "echo 'No build step required'",
+    "test": "node -e \"require('./src/index.js')\" && echo 'Tests passed'"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  }
+}
