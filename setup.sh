@@ -13,7 +13,7 @@ REINSTALL=false
 
 # ── Colors ────────────────────────────────────────────────
 RED='\e[1;31m'; GREEN='\e[1;32m'; YELLOW='\e[1;33m'
-CYAN='\e[1;36m'; MAGENTA='\e[1;35m'; BOLD='\e[1m'; RESET='\e[0m'
+CYAN='\e[1;36m'; MAGENTA='\e[1;35m'; BOLD='\e[1m'; DIM='\e[2m'; RESET='\e[0m'
 
 # ── Parse flags ───────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
@@ -42,7 +42,7 @@ cat <<'BANNER'
 ╚═╝  ╚═╝╚═════╝ ╚═╝
 BANNER
 echo -e "${CYAN}DNYFappbuilder v${ABP_VERSION} — Setup${RESET}"
-echo -e "${DIM:-}Multi-Language Build System with Device Install${RESET}"
+echo -e "${DIM}Multi-Language Build System with Device Install${RESET}"
 echo ""
 
 # ── Check existing install ────────────────────────────────
