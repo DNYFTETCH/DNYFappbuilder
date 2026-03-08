@@ -35,7 +35,7 @@ log_debug()   { [[ "${ABP_DEBUG:-0}" == "1" ]] && _log DEBUG "$DIM" "DEBUG" "$@"
 # ── Utilities ─────────────────────────────────────────────
 command_exists()  { command -v "$1" &>/dev/null; }
 timestamp()       { date '+%Y-%m-%d_%H-%M-%S'; }
-ensure_dir()      { [[ ! -d "$1" ]] && mkdir -p "$1"; }
+ensure_dir()      { mkdir -p "$1" 2>/dev/null || true; }
 file_size()       { du -sh "$1" 2>/dev/null | cut -f1; }
 is_termux()       { [[ -n "${TERMUX_VERSION:-}" ]] || [[ -d "/data/data/com.termux" ]]; }
 is_macos()        { [[ "$(uname)" == "Darwin" ]]; }
