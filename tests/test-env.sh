@@ -1,75 +1,48 @@
 #!/usr/bin/env bash
-# DNYFappbuilder — Environment Profile Manager v2.0.0
-set -Eeuo pipefail
+# DNYFappbuilder — test-env.sh
+# No pipes used — avoids bash -e pipe exit code propagation
 
 ABP_ROOT="${ABP_ROOT:-$HOME/dnyf-appbuilder}"
-source "$ABP_ROOT/lib/common.sh"
-
-ACTION="${1:-list}"; shift || true
+ENV_SCRIPT="$ABP_ROOT/scripts/env.sh"
 ENV_DIR="$ABP_ROOT/config/envs"
+PROFILE="_test_ci_profile"
+TMP_OUT="/tmp/abp_env_test_out.txt"
+
 mkdir -p "$ENV_DIR"
 
-case "$ACTION" in
-    list)
-        log_info "Environment profiles:"
-        if ls "$ENV_DIR"/*.env &>/dev/null; then
-            for f in "$ENV_DIR"/*.env; do
-                echo "  • $(basename "$f" .env)"
-            done
-        else
-            echo "  (none — create with: abp env create <name>)"
-        fi
-        ;;
+# ── 1. Create ────────────────────────────────────────────
+bash "$ENV_SCRIPT" create "$PROFILE" > "$TMP_OUT" 2>&1
+if [ ! -f "$ENV_DIR/$PROFILE.env" ]; then
+    echo "FAIL: create — profile file not found"
+    cat "$TMP_OUT"
+    exit 1
+fi
 
-    create)
-        NAME="${1:-}"
-        [[ -z "$NAME" ]] && { log_error "Usage: abp env create <name>"; exit 1; }
-        FILE="$ENV_DIR/$NAME.env"
-        [[ -f "$FILE" ]] && { log_warn "Profile already exists: $NAME"; exit 0; }
-        cat > "$FILE" <<ENV
-# DNYFappbuilder — Environment: $NAME
-NODE_ENV=$NAME
-PORT=3000
-# Add your variables below:
-ENV
-        log_success "Created profile: $NAME ($FILE)"
-        ;;
+# ── 2. List ──────────────────────────────────────────────
+bash "$ENV_SCRIPT" list > "$TMP_OUT" 2>&1
+if ! grep -q "$PROFILE" "$TMP_OUT"; then
+    echo "FAIL: list — profile not in output"
+    cat "$TMP_OUT"
+    exit 1
+fi
 
-    edit)
-        NAME="${1:-}"
-        [[ -z "$NAME" ]] && { log_error "Usage: abp env edit <name>"; exit 1; }
-        FILE="$ENV_DIR/$NAME.env"
-        [[ ! -f "$FILE" ]] && { log_error "Profile not found: $NAME"; exit 1; }
-        "${EDITOR:-nano}" "$FILE"
-        ;;
+# ── 3. Show ──────────────────────────────────────────────
+bash "$ENV_SCRIPT" show "$PROFILE" > "$TMP_OUT" 2>&1
+if ! grep -q "NODE_ENV" "$TMP_OUT"; then
+    echo "FAIL: show — NODE_ENV not in output"
+    cat "$TMP_OUT"
+    exit 1
+fi
 
-    show)
-        NAME="${1:-}"
-        [[ -z "$NAME" ]] && { log_error "Usage: abp env show <name>"; exit 1; }
-        FILE="$ENV_DIR/$NAME.env"
-        [[ ! -f "$FILE" ]] && { log_error "Profile not found: $NAME"; exit 1; }
-        cat "$FILE"
-        ;;
+# ── 4. Apply ─────────────────────────────────────────────
+bash "$ENV_SCRIPT" apply "$PROFILE" /tmp > "$TMP_OUT" 2>&1
+if [ ! -f "/tmp/.env" ]; then
+    echo "FAIL: apply — /tmp/.env not created"
+    cat "$TMP_OUT"
+    exit 1
+fi
 
-    apply)
-        NAME="${1:-}"
-        [[ -z "$NAME" ]] && { log_error "Usage: abp env apply <name> [project-dir]"; exit 1; }
-        DIR="${2:-.}"
-        FILE="$ENV_DIR/$NAME.env"
-        [[ ! -f "$FILE" ]] && { log_error "Profile not found: $NAME"; exit 1; }
-        cp "$FILE" "$DIR/.env"
-        log_success "Applied profile '$NAME' to $DIR/.env"
-        ;;
+# ── Cleanup ───────────────────────────────────────────────
+rm -f "$ENV_DIR/$PROFILE.env" "/tmp/.env" "$TMP_OUT"
 
-    delete)
-        NAME="${1:-}"
-        [[ -z "$NAME" ]] && { log_error "Usage: abp env delete <name>"; exit 1; }
-        FILE="$ENV_DIR/$NAME.env"
-        [[ ! -f "$FILE" ]] && { log_error "Profile not found: $NAME"; exit 1; }
-        confirm "Delete profile '$NAME'?" && rm "$FILE" && log_success "Deleted: $NAME"
-        ;;
-
-    *)
-        echo "Usage: abp env <list|create|edit|show|apply|delete> [name]"
-        ;;
-esac
+echo "Env test passed"
