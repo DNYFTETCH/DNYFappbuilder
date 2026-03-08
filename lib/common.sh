@@ -13,7 +13,9 @@ export DIM='\e[2m'
 export RESET='\e[0m'
 
 # ── Logging ───────────────────────────────────────────────
-ABP_LOG_FILE="${ABP_LOG_DIR:-$HOME/dnyf-appbuilder/logs}/build.log"
+ABP_LOG_DIR="${ABP_LOG_DIR:-$HOME/dnyf-appbuilder/logs}"
+ABP_LOG_FILE="${ABP_LOG_DIR}/build.log"
+mkdir -p "$ABP_LOG_DIR" 2>/dev/null || true
 
 _log() {
     local level="$1" color="$2" label="$3"; shift 3
