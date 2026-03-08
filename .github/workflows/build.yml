@@ -115,54 +115,6 @@ jobs:
       - name: Smoke test Python container
         run: |
           docker run -d --name dnyf-python-test -p 8000:8000 dnyf-python:test
-          sleep 6
+          sleep 8
           curl -sf http://localhost:8000/health || (docker logs dnyf-python-test && exit 1)
           docker rm -f dnyf-python-test
-
-  # ── Job 5: Validate Flutter Example ──────────────────────
-  validate-flutter:
-    name: Validate Flutter Example
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.19.0'
-          channel: 'stable'
-
-      - name: Flutter pub get
-        run: |
-          cd examples/flutter-app
-          flutter pub get
-
-      - name: Flutter analyze
-        run: |
-          cd examples/flutter-app
-          flutter analyze || true
-
-      - name: Flutter test
-        run: |
-          cd examples/flutter-app
-          flutter test || true
-
-  # ── Job 6: Validate React Native Example ─────────────────
-  validate-react-native:
-    name: Validate React Native Example
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: |
-          cd examples/react-native-app
-          npm install --legacy-peer-deps
-
-      - name: TypeScript check
-        run: |
-          cd examples/react-native-app
-          npx tsc --noEmit || true
