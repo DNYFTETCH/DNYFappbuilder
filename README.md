@@ -364,7 +364,7 @@ RELEASE LOG ──────────────────────�
 
 ---
 
-## ◈ License
+## ◈ License 
 
 ```
 MIT License — Copyright © 2025 DNYFTECH
