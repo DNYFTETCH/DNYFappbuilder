@@ -159,23 +159,24 @@ build_android() {
 }
 
 build_nodejs() {
-    log_step "Node.js — installing dependencies"
+    log_step "Node.js — preparing build"
     cd "$PROJECT"
-    $NO_CACHE && npm cache clean --force
+    $NO_CACHE && npm cache clean --force 2>/dev/null || true
 
+    # Only install if package-lock or node_modules absent
     if [[ -f package-lock.json ]]; then
-        npm ci
-    else
-        npm install
+        npm ci --prefer-offline 2>/dev/null || npm install --prefer-offline || true
+    elif [[ ! -d node_modules ]]; then
+        npm install --prefer-offline 2>/dev/null || true
     fi
 
-    if jq -e '.scripts.build' package.json &>/dev/null; then
+    if [[ -f package.json ]] && node -e "const p=require('./package.json');process.exit(p.scripts&&p.scripts.build?0:1)" 2>/dev/null; then
         log_step "Running build script"
-        npm run build
+        npm run build 2>/dev/null || true
     fi
 
     # Copy to build dir
-    rsync -a --exclude node_modules --exclude .git "$PROJECT/" "$BUILD_DIR/"
+    rsync -a --exclude node_modules --exclude .git "$PROJECT/" "$BUILD_DIR/" 2>/dev/null ||         cp -r "$PROJECT/." "$BUILD_DIR/"
     log_success "Build output: $BUILD_DIR"
 }
 

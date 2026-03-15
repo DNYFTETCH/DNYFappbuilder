@@ -5,7 +5,7 @@ set -Eeuo pipefail
 ABP_ROOT="${ABP_ROOT:-$HOME/dnyf-appbuilder}"
 source "$ABP_ROOT/lib/common.sh"
 
-REPO="https://github.com/DNYFTECH/dnyf-appbuilder"
+REPO="https://github.com/DNYFTECH/DNYFappbuilder"
 BRANCH="main"
 TMP_DIR="/tmp/abp-update-$$"
 

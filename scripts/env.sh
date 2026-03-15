@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # DNYFappbuilder — Environment Profile Manager v2.0.0
 
-ABP_ROOT="${ABP_ROOT:-$HOME/dnyf-appbuilder}"
+export ABP_ROOT="${ABP_ROOT:-$HOME/dnyf-appbuilder}"
 source "$ABP_ROOT/lib/common.sh"
 
 ACTION="${1:-list}"
@@ -19,7 +19,9 @@ case "$ACTION" in
             echo "  • $(basename "$f" .env)"
             local_count=$(( local_count + 1 ))
         done
-        [ "$local_count" -eq 0 ] && echo "  (none — create with: abp env create <name>)"
+        if [ "$local_count" -eq 0 ]; then
+            echo "  (none — create with: abp env create <name>)"
+        fi
         ;;
 
     create)

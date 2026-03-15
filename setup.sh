@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════╗
 # ║    DNYFappbuilder v2.0.0 — Setup & Installation          ║
-# ║    GitHub: https://github.com/DNYFTECH/dnyf-appbuilder    ║
+# ║    GitHub: https://github.com/DNYFTECH/DNYFappbuilder    ║
 # ╚══════════════════════════════════════════════════════════╝
 set -Eeuo pipefail
 
@@ -151,4 +151,4 @@ echo "  abp install app.apk --qr    # Wireless QR install"
 echo "  abp sign app.apk --auto     # Auto-sign APK"
 echo "  abp keygen                   # Generate keystore"
 echo ""
-echo -e "${DIM}GitHub: https://github.com/DNYFTECH/dnyf-appbuilder${RESET}"
+echo -e "${DIM}GitHub: https://github.com/DNYFTECH/DNYFappbuilder${RESET}"

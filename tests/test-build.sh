@@ -7,13 +7,12 @@ cd /tmp
 rm -rf _abp_build_test 2>/dev/null || true
 mkdir -p _abp_build_test/src
 
-# Create minimal package.json
 cat > _abp_build_test/package.json <<'JSON'
 {
   "name": "test-build",
   "version": "1.0.0",
   "main": "src/index.js",
-  "scripts": { "start": "node src/index.js" }
+  "scripts": { "start": "node src/index.js", "build": "echo build-ok" }
 }
 JSON
 
