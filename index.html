@@ -531,6 +531,175 @@
     .commands-section, .install-section { padding: 60px 20px; }
     footer { padding: 32px 20px; flex-direction: column; }
   }
+
+  /* ── AI Broadcast Player ───────────────────────────── */
+  .broadcast-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(8,11,16,0.96);
+    border-top: 1px solid var(--border);
+    backdrop-filter: blur(24px);
+    padding: 14px 32px;
+    display: flex; align-items: center; gap: 20px;
+    z-index: 200;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.4);
+  }
+  .broadcast-bar.visible { transform: translateY(0); }
+
+  .broadcast-icon {
+    width: 40px; height: 40px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 0 16px rgba(108,99,255,0.4);
+  }
+  .broadcast-icon:hover { transform: scale(1.1); background: #7c74ff; }
+  .broadcast-icon svg { width: 16px; height: 16px; fill: #fff; }
+
+  .broadcast-info { flex: 1; min-width: 0; }
+  .broadcast-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 2px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .broadcast-dot {
+    width: 6px; height: 6px;
+    background: var(--accent2);
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  .broadcast-dot.paused { animation: none; background: var(--dim); }
+  .broadcast-text {
+    font-size: 13px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 500px;
+  }
+
+  .broadcast-progress {
+    flex: 1; max-width: 300px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .broadcast-track {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .broadcast-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.3s linear;
+  }
+  .broadcast-time {
+    font-size: 10px;
+    color: var(--muted);
+    display: flex; justify-content: space-between;
+  }
+
+  .broadcast-controls { display: flex; gap: 8px; align-items: center; }
+  .bc-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 14px;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .bc-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .bc-btn.active { background: rgba(108,99,255,0.15); border-color: var(--accent); color: var(--accent); }
+
+  .broadcast-speed {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 5px 8px;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .broadcast-speed:hover { border-color: var(--accent); color: var(--accent); }
+
+  .broadcast-close {
+    background: none;
+    border: none;
+    color: var(--dim);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px 8px;
+    transition: color 0.2s;
+    line-height: 1;
+  }
+  .broadcast-close:hover { color: var(--text); }
+
+  /* Listen button in hero */
+  .btn-listen {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(0,212,170,0.1);
+    border: 1px solid rgba(0,212,170,0.3);
+    color: var(--accent2);
+    padding: 14px 28px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+    animation: fadeUp 0.8s 0.75s ease both;
+  }
+  .btn-listen:hover {
+    background: rgba(0,212,170,0.18);
+    border-color: var(--accent2);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(0,212,170,0.2);
+  }
+  .btn-listen .listen-waves {
+    display: flex; gap: 2px; align-items: center; height: 14px;
+  }
+  .btn-listen .listen-waves span {
+    width: 3px;
+    background: var(--accent2);
+    border-radius: 2px;
+    animation: wave 1s ease-in-out infinite;
+  }
+  .btn-listen .listen-waves span:nth-child(1) { height: 6px;  animation-delay: 0s; }
+  .btn-listen .listen-waves span:nth-child(2) { height: 10px; animation-delay: 0.15s; }
+  .btn-listen .listen-waves span:nth-child(3) { height: 14px; animation-delay: 0.3s; }
+  .btn-listen .listen-waves span:nth-child(4) { height: 10px; animation-delay: 0.45s; }
+  .btn-listen .listen-waves span:nth-child(5) { height: 6px;  animation-delay: 0.6s; }
+  @keyframes wave {
+    0%,100% { transform: scaleY(1); opacity: 0.6; }
+    50%      { transform: scaleY(1.6); opacity: 1; }
+  }
+  .btn-listen.playing .listen-waves span { animation-play-state: running; }
+  .btn-listen:not(.playing) .listen-waves span { animation-play-state: paused; opacity: 0.4; }
+
+  @media (max-width: 768px) {
+    .broadcast-bar { padding: 12px 16px; gap: 12px; }
+    .broadcast-progress { display: none; }
+    .broadcast-text { max-width: 180px; }
+    .bc-btn { display: none; }
+  }
+
 </style>
 </head>
 <body>
@@ -595,6 +764,13 @@
     <a href="#install" class="btn-primary">Install DNYFappbuilder</a>
     <a href="https://github.com/DNYFTETCH/DNYFappbuilder" class="btn-secondary" target="_blank">View on GitHub</a>
   </div>
+
+  <button class="btn-listen" id="listenBtn" onclick="toggleBroadcast()">
+    <div class="listen-waves">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    Listen to Overview
+  </button>
 
   <div class="terminal-wrap">
     <div class="terminal">
@@ -887,5 +1063,45 @@ const observer = new IntersectionObserver(entries => {
 }, { threshold: 0.1 });
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 </script>
+
+<!-- AI Broadcast Player -->
+<div class="broadcast-bar" id="broadcastBar">
+  <div class="broadcast-icon" id="broadcastPlayBtn" onclick="toggleBroadcast()" title="Play / Pause">
+    <svg id="iconPlay"  viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    <svg id="iconPause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+  </div>
+
+  <div class="broadcast-info">
+    <div class="broadcast-label">
+      <span class="broadcast-dot" id="broadcastDot"></span>
+      AI Overview — DNYFappbuilder
+    </div>
+    <div class="broadcast-text" id="broadcastText">Press play to hear the overview...</div>
+  </div>
+
+  <div class="broadcast-progress">
+    <div class="broadcast-track" onclick="seekBroadcast(event)">
+      <div class="broadcast-fill" id="broadcastFill"></div>
+    </div>
+    <div class="broadcast-time">
+      <span id="broadcastCurrent">0:00</span>
+      <span id="broadcastTotal">—</span>
+    </div>
+  </div>
+
+  <div class="broadcast-controls">
+    <button class="bc-btn" onclick="prevChapter()" title="Previous">⏮ Prev</button>
+    <button class="bc-btn" onclick="nextChapter()" title="Next">Next ⏭</button>
+    <select class="broadcast-speed" id="speedSelect" onchange="changeSpeed(this.value)" title="Playback speed">
+      <option value="0.8">0.8×</option>
+      <option value="1" selected>1×</option>
+      <option value="1.2">1.2×</option>
+      <option value="1.5">1.5×</option>
+    </select>
+  </div>
+
+  <button class="broadcast-close" onclick="closeBroadcast()" title="Close">✕</button>
+</div>
+
 </body>
 </html>
