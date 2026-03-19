@@ -26,103 +26,112 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      # ── Versioning ────────────────────────────────────────
       - name: Get version
         id: version
         run: |
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            # Tagged release — use tag name
-            VERSION="${GITHUB_REF_NAME}"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VERSION="$GITHUB_REF_NAME"
+            IS_PRERELEASE="false"
           else
-            # Push to main — auto-version from date + short SHA
             VERSION="v$(date +'%Y.%m.%d')-$(git rev-parse --short HEAD)"
+            IS_PRERELEASE="true"
           fi
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "IS_TAG=$([[ '${GITHUB_REF}' == refs/tags/* ]] && echo true || echo false)" >> $GITHUB_OUTPUT
-          echo "✓ Version: $VERSION"
+          echo "VERSION=$VERSION"         >> "$GITHUB_OUTPUT"
+          echo "IS_PRERELEASE=$IS_PRERELEASE" >> "$GITHUB_OUTPUT"
+          echo "✓ Version: $VERSION (prerelease: $IS_PRERELEASE)"
 
+      # ── Skip if release already exists ───────────────────
       - name: Check if release already exists
         id: check
-        run: |
-          VERSION="${{ steps.version.outputs.VERSION }}"
-          if gh release view "$VERSION" &>/dev/null 2>&1; then
-            echo "EXISTS=true" >> $GITHUB_OUTPUT
-            echo "⚠ Release $VERSION already exists — skipping"
-          else
-            echo "EXISTS=false" >> $GITHUB_OUTPUT
-          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # ── Decode keystore from secret ──────────────────────
-      - name: Decode keystore
-        id: keystore
         run: |
-          if [[ -n "${{ secrets.KEYSTORE_BASE64 }}" ]]; then
-            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > /tmp/dnyf-release.keystore
-            echo "available=true" >> $GITHUB_OUTPUT
-            echo "✓ Keystore decoded from secret"
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          if gh release view "$VERSION" > /dev/null 2>&1; then
+            echo "EXISTS=true"  >> "$GITHUB_OUTPUT"
+            echo "⚠ Release $VERSION already exists — skipping"
           else
-            echo "available=false" >> $GITHUB_OUTPUT
-            echo "⚠ KEYSTORE_BASE64 secret not set — skipping APK signing"
+            echo "EXISTS=false" >> "$GITHUB_OUTPUT"
+            echo "✓ New release: $VERSION"
           fi
 
-      # ── Build example APK if keystore available ──────────
-      - name: Set up Android SDK (if signing)
+      # ── Keystore (optional) ───────────────────────────────
+      - name: Decode keystore
+        id: keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [[ -n "${KEYSTORE_BASE64}" ]]; then
+            echo "${KEYSTORE_BASE64}" | base64 --decode > /tmp/dnyf-release.keystore
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "✓ Keystore decoded"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "⚠ KEYSTORE_BASE64 not set — skipping signing"
+          fi
+
+      # ── Android signing (only if keystore present) ────────
+      - name: Set up Android SDK
         if: steps.keystore.outputs.available == 'true'
         uses: android-actions/setup-android@v3
 
-      - name: Build + sign example APK
+      - name: Sign example APK
         if: steps.keystore.outputs.available == 'true'
         env:
           KEY_ALIAS:      ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD:   ${{ secrets.KEY_PASSWORD }}
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
         run: |
-          # Install ABP
           bash setup.sh --ci --root "$GITHUB_WORKSPACE/dnyf-appbuilder"
           export PATH="$PATH:$GITHUB_WORKSPACE/dnyf-appbuilder/bin"
           export ABP_ROOT="$GITHUB_WORKSPACE/dnyf-appbuilder"
-
-          # Sign any APK produced (example flow)
           if [[ -f examples/android-demo.apk ]]; then
             abp sign examples/android-demo.apk \
               --keystore /tmp/dnyf-release.keystore \
-              --alias "$KEY_ALIAS" \
+              --alias    "$KEY_ALIAS" \
               --password "$KEY_PASSWORD"
             echo "✓ APK signed"
           else
-            echo "No example APK to sign — keystore verified OK"
-            keytool -list -keystore /tmp/dnyf-release.keystore \
-              -storepass "$STORE_PASSWORD" -v | head -10
+            keytool -list \
+              -keystore /tmp/dnyf-release.keystore \
+              -storepass "$STORE_PASSWORD" \
+              -v 2>/dev/null | head -6
+            echo "✓ Keystore verified"
           fi
 
       # ── Create release archive ────────────────────────────
       - name: Create release archive
+        if: steps.check.outputs.EXISTS == 'false'
         run: |
           VERSION="${{ steps.version.outputs.VERSION }}"
-          tar --exclude='.git' \
-              --exclude='*.log' \
-              --exclude='builds/*' \
-              --exclude='.cache/*' \
-              -czf "DNYFappbuilder-${VERSION}.tar.gz" \
-              --transform "s|^\.|DNYFappbuilder-${VERSION}|" \
-              .
-          echo "✓ Archive: DNYFappbuilder-${VERSION}.tar.gz ($(du -sh DNYFappbuilder-${VERSION}.tar.gz | cut -f1))"
+          mkdir -p "/tmp/DNYFappbuilder-${VERSION}"
+          rsync -a \
+            --exclude='.git' \
+            --exclude='*.log' \
+            --exclude='builds/' \
+            --exclude='.cache/' \
+            --exclude="DNYFappbuilder-*.tar.gz" \
+            . "/tmp/DNYFappbuilder-${VERSION}/"
+          tar -czf "DNYFappbuilder-${VERSION}.tar.gz" \
+            -C /tmp "DNYFappbuilder-${VERSION}"
+          echo "✓ Archive: DNYFappbuilder-${VERSION}.tar.gz ($(du -sh "DNYFappbuilder-${VERSION}.tar.gz" | cut -f1))"
 
       # ── Generate changelog ────────────────────────────────
       - name: Generate changelog
         id: changelog
+        if: steps.check.outputs.EXISTS == 'false'
         run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           if [[ -n "$PREV_TAG" ]]; then
             {
               echo "CHANGES<<EOF"
-              git log "$PREV_TAG"..HEAD --pretty=format:"- %s"
+              git log "${PREV_TAG}..HEAD" --pretty=format:"- %s" | head -30
               echo ""
               echo "EOF"
-            } >> $GITHUB_OUTPUT
+            } >> "$GITHUB_OUTPUT"
           else
-            echo "CHANGES=Initial release 🎉" >> $GITHUB_OUTPUT
+            echo "CHANGES=Initial release 🎉" >> "$GITHUB_OUTPUT"
           fi
 
       # ── Publish GitHub Release ────────────────────────────
@@ -130,9 +139,9 @@ jobs:
         if: steps.check.outputs.EXISTS == 'false'
         uses: softprops/action-gh-release@v1
         with:
-          name: "DNYFappbuilder ${{ steps.version.outputs.VERSION }}"
-          tag_name: "${{ steps.version.outputs.VERSION }}"
-          prerelease: ${{ steps.version.outputs.IS_TAG == 'false' }}
+          name:       "DNYFappbuilder ${{ steps.version.outputs.VERSION }}"
+          tag_name:   "${{ steps.version.outputs.VERSION }}"
+          prerelease: ${{ steps.version.outputs.IS_PRERELEASE == 'true' }}
           body: |
             ## What's Changed
 
@@ -153,23 +162,9 @@ jobs:
 
             ## Quick Start
             ```bash
-            abp doctor --fix     # auto-install all tools
+            abp doctor --fix
             abp init myapp flutter
             abp build myapp --target android --profile release --sign --install
             ```
-
-            ## Signing Setup
-            To enable APK signing in CI, add these repository secrets:
-            - `KEYSTORE_BASE64` — base64-encoded `.keystore` file
-            - `KEY_ALIAS` — key alias
-            - `KEY_PASSWORD` — key password
-            - `STORE_PASSWORD` — keystore password
-
-            ```bash
-            # Generate and encode your keystore
-            abp keygen
-            base64 ~/dnyf-appbuilder/config/dnyf-release.keystore | pbcopy
-            ```
           files: "DNYFappbuilder-${{ steps.version.outputs.VERSION }}.tar.gz"
           draft: false
-          prerelease: false
