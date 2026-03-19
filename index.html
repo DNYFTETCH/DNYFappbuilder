@@ -8,6 +8,7 @@
 <meta property="og:title" content="DNYFappbuilder v2.0.0">
 <meta property="og:description" content="Autonomous Multi-Language Build Intelligence">
 <meta property="og:url" content="https://dnyftetch.github.io/DNYFappbuilder">
+<meta property="og:site_name" content="DNYF TETCH">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -700,19 +701,85 @@
     .bc-btn { display: none; }
   }
 
+
+  /* ── DNYF TETCH parent brand ──────────────────────── */
+  .brand-bar {
+    background: #0a0e14;
+    border-bottom: 1px solid rgba(108,99,255,0.15);
+    padding: 6px 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 101;
+    animation: slideDown 0.6s ease both;
+  }
+  .brand-bar a {
+    color: var(--muted);
+    text-decoration: none;
+    display: flex; align-items: center; gap: 8px;
+    transition: color 0.2s;
+  }
+  .brand-bar a:hover { color: var(--accent); }
+  .brand-bar-left { display: flex; align-items: center; gap: 6px; }
+  .brand-bar-left::before {
+    content: '←';
+    font-size: 10px;
+    color: var(--dim);
+  }
+  .brand-bar-center {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 16px;
+  }
+  .brand-separator { color: var(--dim); }
+  .brand-bar-right { display: flex; align-items: center; gap: 16px; }
+  .brand-bar-right a { font-size: 11px; }
+
+  /* Push nav + content down to account for brand bar */
+  nav { top: 33px !important; }
+  .hero { padding-top: 153px !important; }
+
+  @media (max-width: 768px) {
+    .brand-bar { padding: 6px 16px; }
+    .brand-bar-center { display: none; }
+    .hero { padding-top: 130px !important; }
+  }
+
 </style>
 </head>
 <body>
 
 <div class="cursor" id="cursor"></div>
 <div class="cursor-ring" id="cursorRing"></div>
+<!-- DNYF TETCH Parent Brand Bar -->
+<div class="brand-bar">
+  <div class="brand-bar-left">
+    <a href="https://dnyftetch.github.io/dnyf-tetch-ai-website" target="_blank">
+      DNYF TETCH
+    </a>
+  </div>
+  <div class="brand-bar-center">
+    <a href="https://dnyftetch.github.io/dnyf-tetch-ai-website#projects" target="_blank">Projects</a>
+    <span class="brand-separator">·</span>
+    <a href="https://dnyftetch.github.io/dnyf-tetch-ai-website#ai-chat" target="_blank">AI Chat</a>
+    <span class="brand-separator">·</span>
+    <a href="https://dnyftetch.github.io/dnyf-tetch-ai-website#about" target="_blank">About</a>
+    <span class="brand-separator">·</span>
+    <a href="https://dnyftetch.github.io/dnyf-tetch-ai-website#contact" target="_blank">Contact</a>
+  </div>
+  <div class="brand-bar-right">
+    <a href="https://github.com/dnyftetch" target="_blank">github.com/dnyftetch</a>
+  </div>
+</div>
+
 <div class="orb orb-1"></div>
 <div class="orb orb-2"></div>
 <div class="orb orb-3"></div>
 
 <!-- Nav -->
 <nav>
-  <a href="#" class="nav-logo">
+  <a href="https://dnyftetch.github.io/DNYFappbuilder" class="nav-logo">
     <span></span>ABP
   </a>
   <ul class="nav-links">
@@ -1024,9 +1091,12 @@
 <!-- Footer -->
 <footer>
   <div class="footer-left">
-    <strong>DNYFappbuilder v2.0.0</strong> · MIT License · © 2025 DNYFTECH
+    <strong>DNYFappbuilder v2.0.0</strong> · MIT License · © 2025
+    <a href="https://dnyftetch.github.io/dnyf-tetch-ai-website" target="_blank"
+       style="color:var(--accent);text-decoration:none;margin-left:4px">DNYF TETCH</a>
   </div>
   <div class="footer-links">
+    <a href="https://dnyftetch.github.io/dnyf-tetch-ai-website" target="_blank">DNYF TETCH</a>
     <a href="https://github.com/DNYFTETCH/DNYFappbuilder" target="_blank">GitHub</a>
     <a href="https://github.com/DNYFTETCH/DNYFappbuilder/releases" target="_blank">Releases</a>
     <a href="https://github.com/DNYFTETCH/DNYFappbuilder/issues" target="_blank">Issues</a>
