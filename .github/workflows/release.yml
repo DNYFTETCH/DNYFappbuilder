@@ -18,10 +18,60 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
       - name: Get version
         id: version
         run: echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
 
+      # ── Decode keystore from secret ──────────────────────
+      - name: Decode keystore
+        id: keystore
+        run: |
+          if [[ -n "${{ secrets.KEYSTORE_BASE64 }}" ]]; then
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > /tmp/dnyf-release.keystore
+            echo "available=true" >> $GITHUB_OUTPUT
+            echo "✓ Keystore decoded from secret"
+          else
+            echo "available=false" >> $GITHUB_OUTPUT
+            echo "⚠ KEYSTORE_BASE64 secret not set — skipping APK signing"
+          fi
+
+      # ── Build example APK if keystore available ──────────
+      - name: Set up Android SDK (if signing)
+        if: steps.keystore.outputs.available == 'true'
+        uses: android-actions/setup-android@v3
+
+      - name: Build + sign example APK
+        if: steps.keystore.outputs.available == 'true'
+        env:
+          KEY_ALIAS:      ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD:   ${{ secrets.KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+        run: |
+          # Install ABP
+          bash setup.sh --ci --root "$GITHUB_WORKSPACE/dnyf-appbuilder"
+          export PATH="$PATH:$GITHUB_WORKSPACE/dnyf-appbuilder/bin"
+          export ABP_ROOT="$GITHUB_WORKSPACE/dnyf-appbuilder"
+
+          # Sign any APK produced (example flow)
+          if [[ -f examples/android-demo.apk ]]; then
+            abp sign examples/android-demo.apk \
+              --keystore /tmp/dnyf-release.keystore \
+              --alias "$KEY_ALIAS" \
+              --password "$KEY_PASSWORD"
+            echo "✓ APK signed"
+          else
+            echo "No example APK to sign — keystore verified OK"
+            keytool -list -keystore /tmp/dnyf-release.keystore \
+              -storepass "$STORE_PASSWORD" -v | head -10
+          fi
+
+      # ── Create release archive ────────────────────────────
       - name: Create release archive
         run: |
           VERSION="${{ steps.version.outputs.VERSION }}"
@@ -30,11 +80,11 @@ jobs:
               --exclude='builds/*' \
               --exclude='.cache/*' \
               -czf "DNYFappbuilder-${VERSION}.tar.gz" \
-              -C .. DNYFappbuilder/ 2>/dev/null || \
-          tar --exclude='.git' \
-              --exclude='*.log' \
-              -czf "DNYFappbuilder-${VERSION}.tar.gz" .
+              --transform "s|^\.|DNYFappbuilder-${VERSION}|" \
+              .
+          echo "✓ Archive: DNYFappbuilder-${VERSION}.tar.gz ($(du -sh DNYFappbuilder-${VERSION}.tar.gz | cut -f1))"
 
+      # ── Generate changelog ────────────────────────────────
       - name: Generate changelog
         id: changelog
         run: |
@@ -50,6 +100,7 @@ jobs:
             echo "CHANGES=Initial release 🎉" >> $GITHUB_OUTPUT
           fi
 
+      # ── Publish GitHub Release ────────────────────────────
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -62,26 +113,34 @@ jobs:
             ## Install
 
             ```bash
-            # One-liner (recommended)
-            curl -fsSL https://raw.githubusercontent.com/DNYFTECH/DNYFappbuilder/main/install.sh | bash
-
-            # Manual
-            git clone https://github.com/DNYFTECH/DNYFappbuilder.git ~/dnyf-appbuilder
-            cd ~/dnyf-appbuilder && ./setup.sh
-            source ~/.bashrc
+            # One-liner (Linux / macOS / Termux)
+            curl -fsSL https://raw.githubusercontent.com/DNYFTETCH/DNYFappbuilder/main/install.sh | bash
             ```
 
-            ## Termux (Android)
             ```bash
-            pkg install git
-            curl -fsSL https://raw.githubusercontent.com/DNYFTECH/DNYFappbuilder/main/install.sh | bash
+            # Termux (Android)
+            pkg install git curl
+            curl -fsSL https://raw.githubusercontent.com/DNYFTETCH/DNYFappbuilder/main/install.sh | bash
             ```
 
             ## Quick Start
             ```bash
-            abp doctor
+            abp doctor --fix     # auto-install all tools
             abp init myapp flutter
-            abp build myapp --target android --sign --install
+            abp build myapp --target android --profile release --sign --install
+            ```
+
+            ## Signing Setup
+            To enable APK signing in CI, add these repository secrets:
+            - `KEYSTORE_BASE64` — base64-encoded `.keystore` file
+            - `KEY_ALIAS` — key alias
+            - `KEY_PASSWORD` — key password
+            - `STORE_PASSWORD` — keystore password
+
+            ```bash
+            # Generate and encode your keystore
+            abp keygen
+            base64 ~/dnyf-appbuilder/config/dnyf-release.keystore | pbcopy
             ```
           files: "DNYFappbuilder-${{ steps.version.outputs.VERSION }}.tar.gz"
           draft: false
