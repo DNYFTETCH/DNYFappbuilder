@@ -1,68 +1,79 @@
-# Changelog
+# Changelog — DNYFappbuilder
 
-## [2.0.0] — 2025-03-06
+## v2.2.0 — 2025
 
-### Added — Device Installation
-- `abp devices` — List all connected Android/iOS devices
-- `abp devices --wireless` — Enable wireless ADB
-- `abp devices --connect <ip>` — Connect to WiFi device
-- `abp install <app>` — Install APK/IPA to device
-- `abp install --all` — Install to all connected devices
-- `abp install --wireless <ip>` — Install via WiFi ADB
-- `abp install --qr` — Generate QR code for wireless install
-- `abp install --verify` — Verify installation after install
-- `abp uninstall <package>` — Remove app from device(s)
-- `abp screenshot` — Capture device screenshot
-- `abp logcat` — Stream device logs
+### ✨ New Templates (6 added)
+- **`nextjs`** — Next.js 14 App Router with TypeScript, API routes, layout
+- **`svelte`** — SvelteKit with Vite, Pinia-equivalent stores
+- **`electron`** — Electron 28 desktop app with secure preload, context isolation
+- **`nodejs-ts`** — Node.js + TypeScript + Express with full tsconfig
+- **`django`** — Django 4.2 + Django REST Framework + CORS + WhiteNoise
+- **`go`** — Go 1.21 HTTP server with Chi router, Makefile
+- **`pwa`** — Progressive Web App with Vite PWA plugin, service worker, offline support
+- **`rust`** — Actix-Web 4 REST API with health endpoint
 
-### Added — Signing
-- `abp sign <apk>` — Sign APK with keystore
-- `abp keygen` — Generate release keystore
-- `abp verify-sign <apk>` — Verify APK signature
-- `abp build --sign` — Auto-sign after build
-- `abp build --install` — Auto-install after build
+### 🔧 Fixes
+- **React template** — fully scaffolded without `npm create vite@latest` (no internet required, no prompts)
+- **Vue template** — fully scaffolded without `npm create vite@latest`, includes Pinia + Vue Router
+- **Android template** — migrated to Kotlin DSL (`build.gradle.kts`), ViewBinding enabled
+- **Python template** — added SQLAlchemy, Alembic, pytest-asyncio, full test suite
 
-### Added — Deploy
-- `abp deploy render` — Deploy to Render.com
-- `abp deploy railway` — Deploy to Railway.app
-- `abp deploy vercel` — Deploy to Vercel
-- `abp deploy heroku` — Deploy to Heroku
-- `abp deploy docker <image>` — Push to Docker registry
-- `abp deploy github-pages` — Deploy to GitHub Pages
+### ⚡ Build Engine
+- **`build.sh`** — added dispatch for: `react`, `vue`, `svelte`, `pwa` (Vite), `nextjs`, `electron`, `golang`, `rust`, `django`
+- Vite builds respect `--profile` via `--mode production/development`
+- Go: compiles to binary in `BUILD_DIR`
+- Rust: `cargo build --release` dispatched correctly
 
-### Added — Utilities
-- `abp doctor` — Full environment health check
-- `abp env` — Environment profile management (create/edit/apply/delete)
-- `abp logs` — View build logs
-- `abp update` — Self-update from GitHub
-- `abp plugins` — Plugin management (list/install/remove)
+### 🔍 Detection (detect.sh)
+- New types detected: `svelte`, `electron`, `nextjs`, `react`, `vue` (via vite.config), `nodejs-ts`, `django`, `golang`, `rust`, `pwa`
+- React vs Vue distinguished via vite.config + package.json deps
+- TypeScript Node projects detected separately
 
-### Added — Templates
-- React (Vite), Vue (Vite) templates
-- Full-featured nodejs template (Express + helmet + rate-limit)
-- FastAPI template with proper project structure
-- Native Android (Kotlin) with full Gradle setup
+### 🧪 Tests
+- 8 new test files added (init-react, init-vue, init-python, init-go, init-electron, init-nextjs, build-python, build-react)
+- `test-detect.sh` — validates all 8 project type detections
+- `run-tests.sh` — expanded to 18 total test slots
 
-### Improved
-- Build script: `--profile`, `--parallel`, `--no-cache`, `--notify` flags
-- Docker: multi-stage builds with health checks for all images
-- New Dockerfiles: Android, Flutter, Java/Spring Boot
-- GitHub Actions: build, test, release workflows
-- Bash & Zsh completion scripts
-- Termux-optimized setup and PATH handling
-- `abp version` shows all runtime info
-- Colorized output with spinners and timers
-- Build log file with timestamps
+### 🩺 Doctor
+- `abp doctor --fix` — auto-installs missing tools via pkg/apt/brew/dnf/pacman
+- Detects package manager automatically
+- Saves re-run after fix
 
-### Plugins
-- `qr-installer` — QR code wireless APK distribution
-- `gradle-optimizer` — Gradle performance flags
-- `npm-security` — npm audit integration
+### 🔐 Signing Secrets
+- `abp keygen` — prints all 4 GitHub Actions secret values
+- Saves secrets to `config/github-secrets.txt` (auto-gitignored)
+- Release workflow decodes `KEYSTORE_BASE64` for CI signing
 
-## [1.0.0] — Initial Release
+### 🍺 Homebrew
+- `brew tap DNYFTETCH/tap && brew install abp` now available
+- `update-homebrew.yml` auto-updates formula on release tags
 
-- Basic build system: React Native, Flutter, Android, Node.js, Python, Java
-- `abp init`, `abp build`, `abp docker`, `abp clean`
-- Docker support (Node.js, Python)
-- CI/CD with GitHub Actions
-- Termux compatibility
+---
+
+## v2.0.0 — 2025
+
+### ✨ New Features
+- Device install engine (USB · WiFi ADB · QR code)
+- APK signing pipeline (`abp keygen`, `abp sign`, `abp verify-sign`)
+- 6 cloud deploy targets (Render · Railway · Vercel · Heroku · Docker · GitHub Pages)
+- Plugin system (qr-installer · gradle-optimizer · npm-security)
+- `abp doctor` environment diagnostics
+- `abp env` profile manager
+- `abp update` self-updater
+- Bash + Zsh tab completion
+- GitHub Actions CI (6 jobs)
+- Kubernetes manifests
+- Docker multi-stage builds (5 Dockerfiles)
+
+### 🔧 Renamed
+- AppBuilder Pro → **DNYFappbuilder**
+- `appbuilder-pro` → `dnyf-appbuilder`
+
+---
+
+## v1.0.0 — 2024
+
+- Initial release — core build system
+- Commands: init, build, docker, clean, version
+- Templates: react-native, flutter, android, nodejs, python, java, react, vue
+- Node.js + Python Docker templates

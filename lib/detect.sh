@@ -1,49 +1,85 @@
 #!/usr/bin/env bash
-# DNYFappbuilder — Project Type Detection Library
+# DNYFappbuilder — Project Type Detection v2.2.0
 
 detect_project_type() {
     local path="${1:-.}"
 
+    # ── JavaScript / TypeScript ────────────────────────────
     if [[ -f "$path/package.json" ]]; then
-        if grep -q '"react-native"' "$path/package.json" 2>/dev/null; then
+        local pkg; pkg=$(cat "$path/package.json" 2>/dev/null)
+
+        if echo "$pkg" | grep -q '"react-native"'; then
             echo "react-native"
-        elif grep -q '"next"' "$path/package.json" 2>/dev/null; then
+        elif [[ -f "$path/electron.js" ]] || [[ -f "$path/src/main.js" ]] && echo "$pkg" | grep -q '"electron"'; then
+            echo "electron"
+        elif echo "$pkg" | grep -q '"next"'; then
             echo "nextjs"
-        elif grep -q '"vue"' "$path/package.json" 2>/dev/null; then
+        elif [[ -f "$path/svelte.config.js" ]] || echo "$pkg" | grep -q '"svelte"'; then
+            echo "svelte"
+        elif echo "$pkg" | grep -q '"vue"'; then
             echo "vue"
-        elif grep -q '"@angular/core"' "$path/package.json" 2>/dev/null; then
+        elif echo "$pkg" | grep -q '"@angular/core"'; then
             echo "angular"
+        elif [[ -f "$path/vite.config.js" ]] || [[ -f "$path/vite.config.ts" ]]; then
+            if echo "$pkg" | grep -q '"react"'; then
+                echo "react"
+            elif echo "$pkg" | grep -q '"vue"'; then
+                echo "vue"
+            else
+                echo "nodejs"
+            fi
+        elif [[ -f "$path/tsconfig.json" ]] && echo "$pkg" | grep -q '"typescript"'; then
+            echo "nodejs-ts"
         else
             echo "nodejs"
         fi
+
+    # ── Flutter ────────────────────────────────────────────
     elif [[ -f "$path/pubspec.yaml" ]]; then
         echo "flutter"
+
+    # ── Android / Java / Kotlin ────────────────────────────
     elif [[ -f "$path/build.gradle" ]] || [[ -f "$path/build.gradle.kts" ]]; then
-        if grep -q "spring" "$path/build.gradle" 2>/dev/null || grep -q "spring" "$path/pom.xml" 2>/dev/null; then
+        if grep -q "spring" "$path/build.gradle" 2>/dev/null || \
+           grep -q "spring" "$path/build.gradle.kts" 2>/dev/null; then
             echo "spring-boot"
         else
             echo "android"
         fi
+
     elif [[ -f "$path/pom.xml" ]]; then
         if grep -q "spring" "$path/pom.xml" 2>/dev/null; then
             echo "spring-boot"
         else
             echo "java"
         fi
+
+    # ── Python ─────────────────────────────────────────────
     elif [[ -f "$path/requirements.txt" ]] || [[ -f "$path/setup.py" ]] || [[ -f "$path/pyproject.toml" ]]; then
-        if grep -q "fastapi" "$path/requirements.txt" 2>/dev/null; then
+        local reqs=""
+        [[ -f "$path/requirements.txt" ]] && reqs=$(cat "$path/requirements.txt" 2>/dev/null | tr '[:upper:]' '[:lower:]')
+        if echo "$reqs" | grep -q "fastapi"; then
             echo "fastapi"
-        elif grep -q "django" "$path/requirements.txt" 2>/dev/null; then
+        elif echo "$reqs" | grep -q "django"; then
             echo "django"
-        elif grep -q "flask" "$path/requirements.txt" 2>/dev/null; then
+        elif echo "$reqs" | grep -q "flask"; then
             echo "flask"
         else
             echo "python"
         fi
-    elif [[ -f "$path/Cargo.toml" ]]; then
-        echo "rust"
+
+    # ── Go ─────────────────────────────────────────────────
     elif [[ -f "$path/go.mod" ]]; then
         echo "golang"
+
+    # ── Rust ───────────────────────────────────────────────
+    elif [[ -f "$path/Cargo.toml" ]]; then
+        echo "rust"
+
+    # ── PWA ────────────────────────────────────────────────
+    elif [[ -f "$path/manifest.json" ]] || [[ -f "$path/public/manifest.json" ]]; then
+        echo "pwa"
+
     else
         echo "unknown"
     fi
@@ -63,7 +99,12 @@ detect_build_output() {
                 ios)     echo "$path/build/ios/iphoneos/*.app" ;;
                 web)     echo "$path/build/web" ;;
             esac ;;
-        android) echo "$path/app/build/outputs/apk/release/app-release.apk" ;;
+        android)     echo "$path/app/build/outputs/apk/release/app-release.apk" ;;
+        nodejs|nodejs-ts|react|vue|nextjs|svelte|pwa) echo "$path/dist" ;;
+        python|fastapi|django|flask) echo "$path" ;;
+        golang)      echo "$path/bin/server" ;;
+        rust)        echo "$path/target/release/$( basename "$path")" ;;
+        spring-boot|java) echo "$(find "$path/build/libs" -name "*.jar" 2>/dev/null | head -1)" ;;
         *) echo "" ;;
     esac
 }
