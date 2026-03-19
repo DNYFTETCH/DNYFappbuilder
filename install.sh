@@ -9,8 +9,8 @@ INSTALL_DIR="${HOME}/dnyf-appbuilder"
 VERSION="2.0.0"
 
 # Colors
-RED='\e[1;31m'; GREEN='\e[1;32m'; CYAN='\e[1;36m'; MAGENTA='\e[1;35m'
-BOLD='\e[1m'; RESET='\e[0m'
+RED=$'\e[1;31m'; GREEN=$'\e[1;32m'; CYAN=$'\e[1;36m'; MAGENTA=$'\e[1;35m'
+BOLD=$'\e[1m'; RESET=$'\e[0m'
 
 echo -e "${MAGENTA}${BOLD}"
 cat <<'BANNER'

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docs — DNYFappbuilder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080b10;--bg2:#0d1117;--surface:#111820;--border:#1e2d3d;--accent:#6c63ff;--accent2:#00d4aa;--text:#e6edf3;--muted:#7d8590;--mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);display:flex;min-height:100vh}
+.sidebar{width:260px;background:var(--bg2);border-right:1px solid var(--border);padding:32px 0;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;flex-shrink:0}
+.sidebar-logo{padding:0 24px 32px;border-bottom:1px solid var(--border);margin-bottom:24px}
+.sidebar-logo a{font-family:var(--sans);font-weight:800;font-size:16px;color:var(--text);text-decoration:none}
+.sidebar-logo span{display:block;font-size:11px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
+.nav-group{margin-bottom:8px}
+.nav-group-title{padding:8px 24px;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.nav-link{display:block;padding:8px 24px;font-size:13px;color:var(--muted);text-decoration:none;transition:all 0.15s;border-left:2px solid transparent}
+.nav-link:hover,.nav-link.active{color:var(--text);border-left-color:var(--accent);background:rgba(108,99,255,0.05)}
+.main{margin-left:260px;flex:1;padding:48px 64px;max-width:900px}
+h1{font-family:var(--sans);font-size:40px;font-weight:800;margin-bottom:16px;line-height:1.1}
+h2{font-family:var(--sans);font-size:24px;font-weight:700;margin:48px 0 16px;padding-top:48px;border-top:1px solid var(--border)}
+h2:first-of-type{border-top:none;padding-top:0}
+h3{font-size:16px;font-weight:600;margin:32px 0 12px;color:var(--accent2)}
+p{color:var(--muted);line-height:1.8;margin-bottom:16px;font-size:14px}
+code{background:var(--surface);padding:2px 8px;border-radius:3px;font-size:13px;border:1px solid var(--border);color:var(--accent2)}
+pre{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:20px 24px;overflow-x:auto;margin:16px 0 24px;font-size:13px;line-height:1.8}
+pre code{background:none;padding:0;border:none;color:var(--text)}
+.cmd{color:var(--accent2)}
+.comment{color:var(--muted)}
+table{width:100%;border-collapse:collapse;margin:16px 0 24px;font-size:13px}
+th{text-align:left;padding:10px 16px;background:var(--surface);color:var(--muted);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+td{padding:10px 16px;border-bottom:1px solid rgba(30,45,61,0.5);color:var(--muted)}
+td:first-child{color:var(--accent);font-weight:600}
+.badge{display:inline-block;padding:2px 8px;border-radius:2px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;background:rgba(0,212,170,0.1);color:var(--accent2);border:1px solid rgba(0,212,170,0.2)}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+@media(max-width:768px){.sidebar{display:none}.main{margin-left:0;padding:32px 20px}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <a href="../">ABP</a>
+    <span>DNYFappbuilder v2.0.0</span>
+  </div>
+  <nav>
+    <div class="nav-group">
+      <div class="nav-group-title">Getting Started</div>
+      <a href="#install" class="nav-link active">Installation</a>
+      <a href="#quickstart" class="nav-link">Quick Start</a>
+      <a href="#doctor" class="nav-link">abp doctor</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">Project</div>
+      <a href="#init" class="nav-link">abp init</a>
+      <a href="#build" class="nav-link">abp build</a>
+      <a href="#clean" class="nav-link">abp clean</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">Device</div>
+      <a href="#devices" class="nav-link">abp devices</a>
+      <a href="#install-cmd" class="nav-link">abp install</a>
+      <a href="#logcat" class="nav-link">abp logcat</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">Signing</div>
+      <a href="#keygen" class="nav-link">abp keygen</a>
+      <a href="#sign" class="nav-link">abp sign</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">Deploy</div>
+      <a href="#deploy" class="nav-link">abp deploy</a>
+      <a href="#env" class="nav-link">abp env</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">Reference</div>
+      <a href="#templates" class="nav-link">Templates</a>
+      <a href="#flags" class="nav-link">Build Flags</a>
+      <a href="#plugins" class="nav-link">Plugins</a>
+    </div>
+  </nav>
+</aside>
+
+<main class="main">
+  <h1>DNYFappbuilder Docs</h1>
+  <p>Complete reference for the <code>abp</code> CLI — build system, device installer, signing pipeline, and deploy grid.</p>
+
+  <h2 id="install">Installation</h2>
+  <h3>One-liner</h3>
+  <pre><code><span class="cmd">curl -fsSL https://raw.githubusercontent.com/DNYFTETCH/DNYFappbuilder/main/install.sh | bash</span></code></pre>
+
+  <h3>Termux (Android)</h3>
+  <pre><code><span class="comment"># First-time setup</span>
+<span class="cmd">termux-setup-storage
+pkg install git curl
+curl -fsSL https://raw.githubusercontent.com/DNYFTETCH/DNYFappbuilder/main/install.sh | bash</span></code></pre>
+
+  <h3>Manual</h3>
+  <pre><code><span class="cmd">git clone https://github.com/DNYFTETCH/DNYFappbuilder.git ~/dnyf-appbuilder
+cd ~/dnyf-appbuilder && ./setup.sh
+source ~/.bashrc</span></code></pre>
+
+  <h2 id="quickstart">Quick Start</h2>
+  <pre><code><span class="comment"># 1. Create project</span>
+<span class="cmd">abp init myapp flutter</span>
+
+<span class="comment"># 2. Build, sign, and install in one command</span>
+<span class="cmd">abp build myapp --target android --profile release --sign --install</span>
+
+<span class="comment"># 3. Deploy to cloud</span>
+<span class="cmd">abp deploy railway</span></code></pre>
+
+  <h2 id="doctor">abp doctor</h2>
+  <p>Scans your environment and reports which tools are installed and which are missing.</p>
+  <pre><code><span class="cmd">abp doctor</span></code></pre>
+
+  <h2 id="init">abp init</h2>
+  <p>Scaffold a new project from a template.</p>
+  <pre><code><span class="cmd">abp init &lt;name&gt; &lt;template&gt;</span>
+
+<span class="comment"># Examples</span>
+<span class="cmd">abp init myapp flutter
+abp init api nodejs
+abp init backend python</span></code></pre>
+
+  <h2 id="build">abp build</h2>
+  <p>Build your application. Auto-detects project type.</p>
+  <pre><code><span class="cmd">abp build &lt;path&gt; [flags]</span>
+
+<span class="comment"># Build for Android release, sign, then install</span>
+<span class="cmd">abp build . --target android --profile release --sign --install</span>
+
+<span class="comment"># Build all targets in parallel</span>
+<span class="cmd">abp build . --target all --parallel --notify</span></code></pre>
+
+  <h2 id="devices">abp devices</h2>
+  <p>Lists all connected Android and iOS devices with model, OS version, and battery.</p>
+  <pre><code><span class="cmd">abp devices               </span><span class="comment"># USB devices</span>
+<span class="cmd">abp devices --wireless    </span><span class="comment"># WiFi ADB scan</span></code></pre>
+
+  <h2 id="install-cmd">abp install</h2>
+  <p>Install an APK or IPA to connected devices.</p>
+  <pre><code><span class="cmd">abp install app.apk                    </span><span class="comment"># Auto-select device</span>
+<span class="cmd">abp install app.apk --all              </span><span class="comment"># All devices</span>
+<span class="cmd">abp install app.apk --wireless 192.168.1.10  </span><span class="comment"># WiFi ADB</span>
+<span class="cmd">abp install app.apk --qr               </span><span class="comment"># QR code install</span>
+<span class="cmd">abp install app.apk --verify --package com.myapp  </span><span class="comment"># Verify after install</span></code></pre>
+
+  <h2 id="keygen">abp keygen</h2>
+  <p>Generate a production release keystore using Java keytool.</p>
+  <pre><code><span class="cmd">abp keygen</span>
+<span class="comment"># Output: ~/dnyf-appbuilder/config/dnyf-release.keystore</span></code></pre>
+
+  <h2 id="sign">abp sign</h2>
+  <pre><code><span class="cmd">abp sign app.apk --auto               </span><span class="comment"># Auto-generates key if absent</span>
+<span class="cmd">abp sign app.apk --keystore my.jks    </span><span class="comment"># Specific keystore</span>
+<span class="cmd">abp verify-sign app.apk               </span><span class="comment"># Verify signature</span></code></pre>
+
+  <h2 id="deploy">abp deploy</h2>
+  <table>
+    <tr><th>Target</th><th>Command</th><th>Platform</th></tr>
+    <tr><td>render</td><td><code>abp deploy render</code></td><td>Render.com</td></tr>
+    <tr><td>railway</td><td><code>abp deploy railway</code></td><td>Railway.app</td></tr>
+    <tr><td>vercel</td><td><code>abp deploy vercel</code></td><td>Vercel</td></tr>
+    <tr><td>heroku</td><td><code>abp deploy heroku</code></td><td>Heroku</td></tr>
+    <tr><td>docker</td><td><code>abp deploy docker &lt;image&gt;</code></td><td>Docker registry</td></tr>
+    <tr><td>github-pages</td><td><code>abp deploy github-pages</code></td><td>GitHub Pages</td></tr>
+  </table>
+
+  <h2 id="env">abp env</h2>
+  <pre><code><span class="cmd">abp env create production
+abp env list
+abp env apply production ./myapp
+abp env show production
+abp env delete staging</span></code></pre>
+
+  <h2 id="templates">Templates</h2>
+  <table>
+    <tr><th>Name</th><th>Language</th><th>Output</th></tr>
+    <tr><td>react-native</td><td>TypeScript</td><td>Android APK · iOS IPA</td></tr>
+    <tr><td>flutter</td><td>Dart</td><td>Android · iOS · Web</td></tr>
+    <tr><td>android</td><td>Kotlin</td><td>Android APK</td></tr>
+    <tr><td>nodejs</td><td>JavaScript</td><td>Express server</td></tr>
+    <tr><td>python</td><td>Python</td><td>FastAPI server</td></tr>
+    <tr><td>java</td><td>Java</td><td>Spring Boot JAR</td></tr>
+    <tr><td>react</td><td>JavaScript</td><td>Vite web app</td></tr>
+    <tr><td>vue</td><td>JavaScript</td><td>Vite web app</td></tr>
+  </table>
+
+  <h2 id="flags">Build Flags</h2>
+  <table>
+    <tr><th>Flag</th><th>Values</th><th>Description</th></tr>
+    <tr><td>--target</td><td>android · ios · web · all</td><td>Build platform(s)</td></tr>
+    <tr><td>--profile</td><td>debug · release · staging</td><td>Build profile</td></tr>
+    <tr><td>--parallel</td><td>—</td><td>Build all targets simultaneously</td></tr>
+    <tr><td>--sign</td><td>—</td><td>Auto-sign after build</td></tr>
+    <tr><td>--install</td><td>—</td><td>Install to device after build</td></tr>
+    <tr><td>--no-cache</td><td>—</td><td>Bypass build cache</td></tr>
+    <tr><td>--notify</td><td>—</td><td>Push notification on completion</td></tr>
+    <tr><td>--output</td><td>&lt;dir&gt;</td><td>Custom output directory</td></tr>
+  </table>
+
+  <h2 id="plugins">Plugins</h2>
+  <table>
+    <tr><th>Plugin</th><th>Function</th></tr>
+    <tr><td>qr-installer</td><td>Serves APK via HTTP + generates QR for wireless install</td></tr>
+    <tr><td>gradle-optimizer</td><td>Tunes Gradle memory, parallel builds, and cache</td></tr>
+    <tr><td>npm-security</td><td>Runs npm audit before every JS build</td></tr>
+  </table>
+  <pre><code><span class="cmd">abp plugins list
+abp plugins install &lt;name&gt;
+abp plugins remove &lt;name&gt;</span></code></pre>
+</main>
+</body>
+</html>

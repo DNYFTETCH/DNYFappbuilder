@@ -2,15 +2,15 @@
 # DNYFappbuilder — Common Library v2.0.0
 
 # ── Colors ────────────────────────────────────────────────
-export RED='\e[1;31m'
-export GREEN='\e[1;32m'
-export YELLOW='\e[1;33m'
-export CYAN='\e[1;36m'
-export MAGENTA='\e[1;35m'
-export BLUE='\e[1;34m'
-export BOLD='\e[1m'
-export DIM='\e[2m'
-export RESET='\e[0m'
+export RED=$'\e[1;31m'
+export GREEN=$'\e[1;32m'
+export YELLOW=$'\e[1;33m'
+export CYAN=$'\e[1;36m'
+export MAGENTA=$'\e[1;35m'
+export BLUE=$'\e[1;34m'
+export BOLD=$'\e[1m'
+export DIM=$'\e[2m'
+export RESET=$'\e[0m'
 
 # ── Logging ───────────────────────────────────────────────
 ABP_LOG_DIR="${ABP_LOG_DIR:-$HOME/dnyf-appbuilder/logs}"

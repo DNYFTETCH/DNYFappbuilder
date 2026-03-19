@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNYFappbuilder — Autonomous Build Intelligence</title>
+<meta name="description" content="Production-grade multi-language build system. Build · Sign · Install · Deploy from a single command. Termux-native.">
+<meta property="og:title" content="DNYFappbuilder v2.0.0">
+<meta property="og:description" content="Autonomous Multi-Language Build Intelligence">
+<meta property="og:url" content="https://dnyftetch.github.io/DNYFappbuilder">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080b10;
+    --bg2: #0d1117;
+    --surface: #111820;
+    --border: #1e2d3d;
+    --accent: #6c63ff;
+    --accent2: #00d4aa;
+    --accent3: #ff6b6b;
+    --text: #e6edf3;
+    --muted: #7d8590;
+    --dim: #3d444d;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.1s ease;
+    mix-blend-mode: screen;
+  }
+  .cursor-ring {
+    width: 32px; height: 32px;
+    border: 1px solid rgba(108,99,255,0.4);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    transition: all 0.15s ease;
+    transform: translate(-12px, -12px);
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(108,99,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(108,99,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.12;
+    animation: drift 20s ease-in-out infinite;
+  }
+  .orb-1 { width: 500px; height: 500px; background: var(--accent); top: -200px; right: -100px; animation-delay: 0s; }
+  .orb-2 { width: 400px; height: 400px; background: var(--accent2); bottom: -150px; left: -100px; animation-delay: -7s; }
+  .orb-3 { width: 300px; height: 300px; background: var(--accent3); top: 50%; left: 30%; animation-delay: -14s; opacity: 0.06; }
+
+  @keyframes drift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -20px) scale(1.05); }
+    66% { transform: translate(-20px, 30px) scale(0.95); }
+  }
+
+  /* Nav */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 40px;
+    background: rgba(8,11,16,0.8);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    z-index: 100;
+    animation: slideDown 0.8s ease both;
+  }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: none; } }
+
+  .nav-logo {
+    font-family: var(--sans);
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+    text-decoration: none;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .nav-logo span {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.5)} }
+
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+
+  .nav-cta {
+    background: var(--accent);
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .nav-cta:hover { background: #7c74ff; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(108,99,255,0.4); }
+
+  /* Sections */
+  section { position: relative; z-index: 1; }
+
+  /* Hero */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 120px 40px 80px;
+    text-align: center;
+  }
+
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(108,99,255,0.1);
+    border: 1px solid rgba(108,99,255,0.3);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 40px;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .hero-ascii {
+    font-family: var(--mono);
+    font-size: clamp(8px, 1.5vw, 14px);
+    line-height: 1.2;
+    color: var(--accent);
+    opacity: 0.7;
+    letter-spacing: 0.02em;
+    margin-bottom: 40px;
+    animation: fadeUp 0.8s 0.3s ease both;
+    white-space: pre;
+  }
+
+  .hero-title {
+    font-family: var(--sans);
+    font-size: clamp(36px, 7vw, 88px);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+    animation: fadeUp 0.8s 0.4s ease both;
+  }
+  .hero-title .accent { color: var(--accent); }
+  .hero-title .accent2 { color: var(--accent2); }
+
+  .hero-sub {
+    font-size: clamp(14px, 2vw, 18px);
+    color: var(--muted);
+    max-width: 560px;
+    line-height: 1.6;
+    margin-bottom: 48px;
+    animation: fadeUp 0.8s 0.5s ease both;
+  }
+
+  .hero-pipeline {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 48px;
+    flex-wrap: wrap; justify-content: center;
+    animation: fadeUp 0.8s 0.6s ease both;
+  }
+  .pipe-step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--text);
+    transition: all 0.2s;
+  }
+  .pipe-step:hover { border-color: var(--accent); color: var(--accent); }
+  .pipe-arrow { color: var(--dim); font-size: 18px; }
+
+  .hero-btns {
+    display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+    animation: fadeUp 0.8s 0.7s ease both;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    padding: 14px 32px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .btn-primary:hover { background: #7c74ff; transform: translateY(-2px); box-shadow: 0 12px 32px rgba(108,99,255,0.4); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text);
+    padding: 14px 32px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 14px;
+    text-decoration: none;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Terminal */
+  .terminal-wrap {
+    max-width: 700px;
+    margin: 80px auto 0;
+    animation: fadeUp 0.8s 0.8s ease both;
+    width: 100%;
+  }
+  .terminal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(108,99,255,0.1);
+  }
+  .term-bar {
+    background: var(--surface);
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .term-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .term-dot-r { background: #ff5f56; }
+  .term-dot-y { background: #ffbd2e; }
+  .term-dot-g { background: #27c93f; }
+  .term-title { margin-left: 8px; font-size: 12px; color: var(--muted); }
+  .term-body { padding: 24px; font-size: 13px; line-height: 2; }
+  .term-line { display: flex; gap: 12px; }
+  .term-prompt { color: var(--accent); user-select: none; }
+  .term-cmd { color: var(--text); }
+  .term-out { color: var(--muted); padding-left: 24px; }
+  .term-success { color: var(--accent2); padding-left: 24px; }
+  .term-cursor {
+    display: inline-block;
+    width: 8px; height: 14px;
+    background: var(--accent);
+    animation: blink 1s step-end infinite;
+    vertical-align: middle;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+
+  /* Stats bar */
+  .stats-bar {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 32px 40px;
+    display: flex; justify-content: center; gap: 0;
+    flex-wrap: wrap;
+  }
+  .stat {
+    flex: 1; min-width: 140px;
+    text-align: center;
+    padding: 0 32px;
+    border-right: 1px solid var(--border);
+  }
+  .stat:last-child { border-right: none; }
+  .stat-num {
+    font-family: var(--sans);
+    font-size: 40px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    display: block;
+  }
+  .stat-label { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 6px; display: block; }
+
+  /* Features grid */
+  .features {
+    padding: 100px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: block;
+  }
+  .section-title {
+    font-family: var(--sans);
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 800;
+    margin-bottom: 64px;
+    line-height: 1.1;
+  }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .feature-card {
+    background: var(--bg);
+    padding: 40px 32px;
+    transition: background 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(108,99,255,0.05), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .feature-card:hover::before { opacity: 1; }
+  .feature-card:hover { background: var(--surface); }
+  .feature-icon {
+    font-size: 28px;
+    margin-bottom: 20px;
+    display: block;
+  }
+  .feature-name {
+    font-family: var(--sans);
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  .feature-desc { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+  /* Commands */
+  .commands-section {
+    padding: 100px 40px;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .commands-inner { max-width: 1100px; margin: 0 auto; }
+  .cmd-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; margin-top: 64px; }
+  .cmd-group-title {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cmd-item { display: flex; align-items: baseline; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgba(30,45,61,0.5); }
+  .cmd-name { color: var(--accent); font-size: 13px; white-space: nowrap; min-width: 160px; }
+  .cmd-desc { color: var(--muted); font-size: 12px; }
+
+  /* Templates */
+  .templates-section { padding: 100px 40px; max-width: 1200px; margin: 0 auto; }
+  .templates-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 64px; }
+  .template-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px 20px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    cursor: default;
+  }
+  .template-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.3); }
+  .tmpl-icon { font-size: 24px; margin-bottom: 12px; }
+  .tmpl-name { font-family: var(--sans); font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .tmpl-lang { font-size: 11px; color: var(--muted); }
+  .tmpl-badge {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(108,99,255,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(108,99,255,0.2);
+  }
+
+  /* Install section */
+  .install-section {
+    padding: 100px 40px;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+  }
+  .install-inner { max-width: 760px; margin: 0 auto; text-align: center; }
+  .install-tabs { display: flex; gap: 0; margin: 48px 0 0; justify-content: center; }
+  .tab-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 10px 24px;
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-right: none;
+    letter-spacing: 0.05em;
+  }
+  .tab-btn:first-child { border-radius: 4px 0 0 4px; }
+  .tab-btn:last-child { border-radius: 0 4px 4px 0; border-right: 1px solid var(--border); }
+  .tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .code-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+    margin-top: 16px;
+    text-align: left;
+    position: relative;
+    overflow-x: auto;
+  }
+  .code-block pre { font-size: 13px; line-height: 2; color: var(--text); }
+  .code-block .comment { color: var(--dim); }
+  .code-block .cmd-text { color: var(--accent2); }
+  .copy-btn {
+    position: absolute;
+    top: 12px; right: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 4px 12px;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* CI section */
+  .ci-section { padding: 100px 40px; max-width: 1000px; margin: 0 auto; }
+  .ci-jobs { display: flex; flex-direction: column; gap: 12px; margin-top: 64px; }
+  .ci-job {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 24px;
+    display: flex; align-items: center; gap: 20px;
+    transition: border-color 0.2s;
+  }
+  .ci-job:hover { border-color: var(--accent2); }
+  .ci-status { width: 10px; height: 10px; border-radius: 50%; background: var(--accent2); flex-shrink: 0; box-shadow: 0 0 8px var(--accent2); }
+  .ci-name { font-family: var(--sans); font-weight: 700; font-size: 15px; flex: 1; }
+  .ci-desc { font-size: 12px; color: var(--muted); }
+  .ci-time { font-size: 11px; color: var(--dim); white-space: nowrap; }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 48px 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 24px;
+    position: relative; z-index: 1;
+  }
+  .footer-left { font-size: 13px; color: var(--muted); }
+  .footer-left strong { color: var(--text); }
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a { color: var(--muted); font-size: 13px; text-decoration: none; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--accent); }
+
+  /* Scroll animation */
+  .reveal { opacity: 0; transform: translateY(32px); transition: all 0.7s ease; }
+  .reveal.visible { opacity: 1; transform: none; }
+
+  @media (max-width: 768px) {
+    nav { padding: 12px 20px; }
+    .nav-links { display: none; }
+    .hero { padding: 100px 20px 60px; }
+    .hero-ascii { font-size: 7px; }
+    .stats-bar { padding: 24px 20px; }
+    .stat { min-width: 100px; padding: 0 16px; }
+    .stat-num { font-size: 28px; }
+    .features, .templates-section, .ci-section { padding: 60px 20px; }
+    .commands-section, .install-section { padding: 60px 20px; }
+    footer { padding: 32px 20px; flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- Nav -->
+<nav>
+  <a href="#" class="nav-logo">
+    <span></span>ABP
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#commands">Commands</a></li>
+    <li><a href="#templates">Templates</a></li>
+    <li><a href="#install">Install</a></li>
+    <li><a href="docs/">Docs</a></li>
+  </ul>
+  <a href="https://github.com/DNYFTETCH/DNYFappbuilder" class="nav-cta" target="_blank">GitHub →</a>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-tag">
+    <span style="width:6px;height:6px;background:var(--accent2);border-radius:50%;display:inline-block"></span>
+    v2.0.0 — Production Ready
+  </div>
+
+  <pre class="hero-ascii"> █████╗ ██████╗ ██████╗ 
+██╔══██╗██╔══██╗██╔══██╗
+███████║██████╔╝██████╔╝
+██╔══██║██╔══██╗██╔═══╝ 
+██║  ██║██████╔╝██║     
+╚═╝  ╚═╝╚═════╝ ╚═╝     </pre>
+
+  <h1 class="hero-title">
+    <span class="accent">Autonomous</span> Build<br>
+    <span class="accent2">Intelligence</span>
+  </h1>
+
+  <p class="hero-sub">
+    Production-grade multi-language build system. Detects your stack, orchestrates your pipeline, and deploys to devices or cloud — from a single command.
+  </p>
+
+  <div class="hero-pipeline">
+    <span class="pipe-step">Init</span>
+    <span class="pipe-arrow">→</span>
+    <span class="pipe-step">Build</span>
+    <span class="pipe-arrow">→</span>
+    <span class="pipe-step">Sign</span>
+    <span class="pipe-arrow">→</span>
+    <span class="pipe-step">Install</span>
+    <span class="pipe-arrow">→</span>
+    <span class="pipe-step">Deploy</span>
+  </div>
+
+  <div class="hero-btns">
+    <a href="#install" class="btn-primary">Install DNYFappbuilder</a>
+    <a href="https://github.com/DNYFTETCH/DNYFappbuilder" class="btn-secondary" target="_blank">View on GitHub</a>
+  </div>
+
+  <div class="terminal-wrap">
+    <div class="terminal">
+      <div class="term-bar">
+        <div class="term-dot term-dot-r"></div>
+        <div class="term-dot term-dot-y"></div>
+        <div class="term-dot term-dot-g"></div>
+        <span class="term-title">termux — abp</span>
+      </div>
+      <div class="term-body">
+        <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">abp init myapp flutter</span></div>
+        <div class="term-out">✓ Created project: myapp (flutter)</div>
+        <div class="term-line" style="margin-top:8px"><span class="term-prompt">$</span><span class="term-cmd">abp build myapp --target android --sign --install</span></div>
+        <div class="term-out">◆ Detected: Flutter · Android SDK 34</div>
+        <div class="term-out">◆ Building release APK...</div>
+        <div class="term-out">◆ Signing with dnyf-release.keystore...</div>
+        <div class="term-success">✓ Installed to Pixel 8 Pro (192.168.1.14)</div>
+        <div class="term-success">✓ Build complete in 42s</div>
+        <div class="term-line" style="margin-top:8px"><span class="term-prompt">$</span><span class="term-cursor"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats -->
+<div class="stats-bar reveal">
+  <div class="stat"><span class="stat-num">9/9</span><span class="stat-label">Tests Passing</span></div>
+  <div class="stat"><span class="stat-num">8</span><span class="stat-label">Templates</span></div>
+  <div class="stat"><span class="stat-num">6</span><span class="stat-label">Deploy Targets</span></div>
+  <div class="stat"><span class="stat-num">67</span><span class="stat-label">Files</span></div>
+  <div class="stat"><span class="stat-num">v2</span><span class="stat-label">Current Release</span></div>
+</div>
+
+<!-- Features -->
+<section class="features" id="features">
+  <span class="section-label reveal">Core Capabilities</span>
+  <h2 class="section-title reveal">Everything the pipeline needs.<br>Nothing it doesn't.</h2>
+  <div class="features-grid reveal">
+    <div class="feature-card">
+      <span class="feature-icon">⚡</span>
+      <div class="feature-name">Auto-Detection</div>
+      <p class="feature-desc">Identifies your project type automatically — Flutter, React Native, Node.js, Python, Spring Boot, and more. No config required.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📱</span>
+      <div class="feature-name">Device Intelligence</div>
+      <p class="feature-desc">Install to Android and iOS devices over USB, WiFi ADB, or QR code. Lists connected devices with model, version, and battery info.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🔐</span>
+      <div class="feature-name">Signing Pipeline</div>
+      <p class="feature-desc">Generates production keystores, signs APKs, and verifies signatures. Full end-to-end signing in one command.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🚀</span>
+      <div class="feature-name">Deploy Grid</div>
+      <p class="feature-desc">Deploy to Render, Railway, Vercel, Heroku, Docker registries, or GitHub Pages — all with a single `abp deploy` command.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🔌</span>
+      <div class="feature-name">Plugin System</div>
+      <p class="feature-desc">Extend with bundled plugins: QR installer, Gradle optimizer, npm security auditor. Build and install your own.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📡</span>
+      <div class="feature-name">Termux Native</div>
+      <p class="feature-desc">Built to run on Android via Termux — no root required. The only professional build system that lives on your phone.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🐳</span>
+      <div class="feature-name">Docker Ready</div>
+      <p class="feature-desc">Production multi-stage Dockerfiles for every stack. Non-root runtime, health checks, Alpine/slim bases included.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">☸️</span>
+      <div class="feature-name">Kubernetes</div>
+      <p class="feature-desc">Production-ready K8s manifests with Deployment, Service, Ingress, resource limits, and liveness probes. One apply away.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Commands -->
+<section class="commands-section" id="commands">
+  <div class="commands-inner">
+    <span class="section-label reveal">Command Reference</span>
+    <h2 class="section-title reveal">Every command. One interface.</h2>
+    <div class="cmd-groups reveal">
+      <div>
+        <div class="cmd-group-title">Project</div>
+        <div class="cmd-item"><span class="cmd-name">abp init</span><span class="cmd-desc">Scaffold from 8 templates</span></div>
+        <div class="cmd-item"><span class="cmd-name">abp build</span><span class="cmd-desc">Multi-target parallel build</span></div>
+        <div class="cmd-item"><span class="cmd-name">abp clean</span><span class="cmd-desc">Clear cache and artifacts</span></div>
+        <div class="cmd-group-title" style="margin-top:32px">Device</div>
+        <div class="cmd-item"><span class="cmd-name">abp devices</span><span class="cmd-desc">Scan connected devices</span></div>
+        <div class="cmd-item"><span class="cmd-name">abp install</span><span class="cmd-desc">USB / WiFi / QR install</span></div>
+        <div class="cmd-item"><span class="cmd-name">abp uninstall</span><span class="cmd-desc">Remove app from device</span></div>
+        <div class="cmd-item"><span class="cmd-name">abp screenshot</span><span class="cmd-desc">Capture device screen</span></div>
+        <div class="cmd-item"><span class="cmd-name">abp logcat</span><span class="cmd-desc">Stream device logs</span></div>
+      </div>
+      <div>
+        <div class="cmd-group-title">Signing</div>
+        <div class="cmd-item"><span class="cmd-name">abp keygen</span><span class="cmd-desc">Generate release keystore</span></div>
+        <div class="cmd-item"><span class="cmd-name">abp sign</span><span class="cmd-desc">Sign APK automatically</span></div>
+        <div class="cmd-item"><span class="cmd-name">abp verify-sign</span><span class="cmd-desc">Verify APK signature</span></div>
+        <div class="cmd-group-title" style="margin-top:32px">Deploy</div>
+        <div class="cmd-item"><span class="cmd-name">abp deploy render</span><span class="cmd-desc">Render.com</span></div>
+        <div class="cmd-item"><span class="cmd-name">abp deploy railway</span><span class="cmd-desc">Railway.app</span></div>
+        <div class="cmd-item"><span class="cmd-name">abp deploy vercel</span><span class="cmd-desc">Vercel</span></div>
+        <div class="cmd-item"><span class="cmd-name">abp deploy heroku</span><span class="cmd-desc">Heroku</span></div>
+        <div class="cmd-item"><span class="cmd-name">abp deploy docker</span><span class="cmd-desc">Docker registry</span></div>
+        <div class="cmd-item"><span class="cmd-name">abp deploy github-pages</span><span class="cmd-desc">GitHub Pages</span></div>
+      </div>
+      <div>
+        <div class="cmd-group-title">System</div>
+        <div class="cmd-item"><span class="cmd-name">abp doctor</span><span class="cmd-desc">Environment diagnostics</span></div>
+        <div class="cmd-item"><span class="cmd-name">abp env</span><span class="cmd-desc">Manage .env profiles</span></div>
+        <div class="cmd-item"><span class="cmd-name">abp logs</span><span class="cmd-desc">View build logs</span></div>
+        <div class="cmd-item"><span class="cmd-name">abp plugins</span><span class="cmd-desc">Plugin management</span></div>
+        <div class="cmd-item"><span class="cmd-name">abp update</span><span class="cmd-desc">Self-update from GitHub</span></div>
+        <div class="cmd-item"><span class="cmd-name">abp version</span><span class="cmd-desc">Version + runtime info</span></div>
+        <div class="cmd-group-title" style="margin-top:32px">Build Flags</div>
+        <div class="cmd-item"><span class="cmd-name">--target</span><span class="cmd-desc">android · ios · web · all</span></div>
+        <div class="cmd-item"><span class="cmd-name">--parallel</span><span class="cmd-desc">Build all targets at once</span></div>
+        <div class="cmd-item"><span class="cmd-name">--sign --install</span><span class="cmd-desc">One-shot build pipeline</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Templates -->
+<section class="templates-section" id="templates">
+  <span class="section-label reveal">Templates</span>
+  <h2 class="section-title reveal">Start with the right scaffold.</h2>
+  <div class="templates-grid reveal">
+    <div class="template-card">
+      <div class="tmpl-icon">⚛️</div>
+      <div class="tmpl-name">React Native</div>
+      <div class="tmpl-lang">TypeScript</div>
+      <span class="tmpl-badge">Android · iOS</span>
+    </div>
+    <div class="template-card">
+      <div class="tmpl-icon">🦋</div>
+      <div class="tmpl-name">Flutter</div>
+      <div class="tmpl-lang">Dart</div>
+      <span class="tmpl-badge">Android · iOS · Web</span>
+    </div>
+    <div class="template-card">
+      <div class="tmpl-icon">🤖</div>
+      <div class="tmpl-name">Android</div>
+      <div class="tmpl-lang">Kotlin</div>
+      <span class="tmpl-badge">APK · AAB</span>
+    </div>
+    <div class="template-card">
+      <div class="tmpl-icon">🟩</div>
+      <div class="tmpl-name">Node.js</div>
+      <div class="tmpl-lang">JavaScript</div>
+      <span class="tmpl-badge">Express · API</span>
+    </div>
+    <div class="template-card">
+      <div class="tmpl-icon">🐍</div>
+      <div class="tmpl-name">Python</div>
+      <div class="tmpl-lang">Python 3</div>
+      <span class="tmpl-badge">FastAPI · Server</span>
+    </div>
+    <div class="template-card">
+      <div class="tmpl-icon">☕</div>
+      <div class="tmpl-name">Java</div>
+      <div class="tmpl-lang">Java 17</div>
+      <span class="tmpl-badge">Spring Boot</span>
+    </div>
+    <div class="template-card">
+      <div class="tmpl-icon">⚡</div>
+      <div class="tmpl-name">React</div>
+      <div class="tmpl-lang">JavaScript</div>
+      <span class="tmpl-badge">Vite · Web</span>
+    </div>
+    <div class="template-card">
+      <div class="tmpl-icon">💚</div>
+      <div class="tmpl-name">Vue</div>
+      <div class="tmpl-lang">JavaScript</div>
+      <span class="tmpl-badge">Vite · Web</span>
+    </div>
+  </div>
+</section>
+
+<!-- CI Jobs -->
+<section class="ci-section reveal">
+  <span class="section-label">CI/CD Pipeline</span>
+  <h2 class="section-title">Automated. Every push.</h2>
+  <div class="ci-jobs">
+    <div class="ci-job"><div class="ci-status"></div><div class="ci-name">Test CLI</div><div class="ci-desc">Installs ABP · runs full 9-test suite</div><div class="ci-time">~9s</div></div>
+    <div class="ci-job"><div class="ci-status"></div><div class="ci-name">Build Node.js Example</div><div class="ci-desc">Compiles + verifies examples/nodejs-api</div><div class="ci-time">~30s</div></div>
+    <div class="ci-job"><div class="ci-status"></div><div class="ci-name">Build Python Example</div><div class="ci-desc">Compiles + verifies examples/python-api</div><div class="ci-time">~20s</div></div>
+    <div class="ci-job"><div class="ci-status"></div><div class="ci-name">Build Docker Images</div><div class="ci-desc">Multi-stage builds · smoke-tests Node + Python containers</div><div class="ci-time">~44s</div></div>
+    <div class="ci-job"><div class="ci-status"></div><div class="ci-name">Validate Flutter</div><div class="ci-desc">pub get · analyze · test</div><div class="ci-time">~60s</div></div>
+    <div class="ci-job"><div class="ci-status"></div><div class="ci-name">Validate React Native</div><div class="ci-desc">npm install · TypeScript check</div><div class="ci-time">~45s</div></div>
+  </div>
+</section>
+
+<!-- Install -->
+<section class="install-section" id="install">
+  <div class="install-inner">
+    <span class="section-label reveal">Get Started</span>
+    <h2 class="section-title reveal">One command to install.</h2>
+    <div class="install-tabs reveal">
+      <button class="tab-btn active" onclick="switchTab('linux')">Linux / macOS</button>
+      <button class="tab-btn" onclick="switchTab('termux')">Termux</button>
+      <button class="tab-btn" onclick="switchTab('manual')">Manual</button>
+    </div>
+
+    <div id="tab-linux" class="tab-content active reveal">
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        <pre><span class="comment"># One-liner install</span>
+<span class="cmd-text">curl -fsSL https://raw.githubusercontent.com/DNYFTETCH/DNYFappbuilder/main/install.sh | bash</span>
+
+<span class="comment"># Verify</span>
+<span class="cmd-text">abp doctor</span></pre>
+      </div>
+    </div>
+
+    <div id="tab-termux" class="tab-content reveal">
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        <pre><span class="comment"># Setup storage (first time only)</span>
+<span class="cmd-text">termux-setup-storage</span>
+
+<span class="comment"># Install dependencies</span>
+<span class="cmd-text">pkg install git curl</span>
+
+<span class="comment"># Install DNYFappbuilder</span>
+<span class="cmd-text">curl -fsSL https://raw.githubusercontent.com/DNYFTETCH/DNYFappbuilder/main/install.sh | bash</span>
+
+<span class="comment"># Verify</span>
+<span class="cmd-text">abp doctor</span></pre>
+      </div>
+    </div>
+
+    <div id="tab-manual" class="tab-content reveal">
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        <pre><span class="cmd-text">git clone https://github.com/DNYFTETCH/DNYFappbuilder.git ~/dnyf-appbuilder</span>
+<span class="cmd-text">cd ~/dnyf-appbuilder && ./setup.sh</span>
+<span class="cmd-text">source ~/.bashrc</span>
+<span class="cmd-text">abp doctor</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-left">
+    <strong>DNYFappbuilder v2.0.0</strong> · MIT License · © 2025 DNYFTECH
+  </div>
+  <div class="footer-links">
+    <a href="https://github.com/DNYFTETCH/DNYFappbuilder" target="_blank">GitHub</a>
+    <a href="https://github.com/DNYFTETCH/DNYFappbuilder/releases" target="_blank">Releases</a>
+    <a href="https://github.com/DNYFTETCH/DNYFappbuilder/issues" target="_blank">Issues</a>
+    <a href="docs/">Docs</a>
+  </div>
+</footer>
+
+<script>
+// Custom cursor
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx = 0, my = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; cursor.style.left = mx - 4 + 'px'; cursor.style.top = my - 4 + 'px'; });
+function animRing() { rx += (mx - rx - 16) * 0.12; ry += (my - ry - 16) * 0.12; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(animRing); }
+animRing();
+
+// Tabs
+function switchTab(id) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+}
+
+// Copy
+function copyCode(btn) {
+  const pre = btn.nextElementSibling;
+  navigator.clipboard.writeText(pre.innerText).then(() => { btn.textContent = 'copied!'; setTimeout(() => btn.textContent = 'copy', 2000); });
+}
+
+// Reveal on scroll
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
