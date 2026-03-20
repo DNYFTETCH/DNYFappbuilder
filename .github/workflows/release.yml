@@ -16,114 +16,97 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # ── Versioning ────────────────────────────────────────
-      - name: Get version
-        id: version
+      # ── Step 1: Determine version ─────────────────────────
+      - name: Set version
+        id: vars
         run: |
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            VERSION="$GITHUB_REF_NAME"
-            IS_PRERELEASE="false"
+            echo "VERSION=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            echo "PRERELEASE=false"           >> "$GITHUB_OUTPUT"
           else
-            VERSION="v$(date +'%Y.%m.%d')-$(git rev-parse --short HEAD)"
-            IS_PRERELEASE="true"
+            SHORT_SHA=$(git rev-parse --short HEAD)
+            echo "VERSION=v$(date +'%Y.%m.%d')-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+            echo "PRERELEASE=true"            >> "$GITHUB_OUTPUT"
           fi
-          echo "VERSION=$VERSION"             >> "$GITHUB_OUTPUT"
-          echo "IS_PRERELEASE=$IS_PRERELEASE" >> "$GITHUB_OUTPUT"
-          echo "✓ Version: $VERSION"
 
-      # ── Skip duplicate releases ───────────────────────────
-      - name: Check if release already exists
+      # ── Step 2: Skip if already released ─────────────────
+      - name: Check duplicate
         id: check
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION="${{ steps.version.outputs.VERSION }}"
-          if gh release view "$VERSION" > /dev/null 2>&1; then
-            echo "EXISTS=true"  >> "$GITHUB_OUTPUT"
-            echo "⚠ Release $VERSION already exists — skipping"
+          TAG="${{ steps.vars.outputs.VERSION }}"
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "SKIP=true"  >> "$GITHUB_OUTPUT"
+            echo "Already released: $TAG — skipping"
           else
-            echo "EXISTS=false" >> "$GITHUB_OUTPUT"
-            echo "✓ Will create release: $VERSION"
+            echo "SKIP=false" >> "$GITHUB_OUTPUT"
+            echo "Will release: $TAG"
           fi
 
-      # ── Create release archive ────────────────────────────
-      - name: Create release archive
-        if: steps.check.outputs.EXISTS == 'false'
+      # ── Step 3: Build tarball ─────────────────────────────
+      - name: Build archive
+        if: steps.check.outputs.SKIP != 'true'
         run: |
-          VERSION="${{ steps.version.outputs.VERSION }}"
-          ARCHIVE="DNYFappbuilder-${VERSION}.tar.gz"
+          TAG="${{ steps.vars.outputs.VERSION }}"
+          git archive \
+            --format=tar.gz \
+            --prefix="DNYFappbuilder-${TAG}/" \
+            HEAD \
+            -o "DNYFappbuilder-${TAG}.tar.gz"
+          echo "✓ $(ls -lh "DNYFappbuilder-${TAG}.tar.gz" | awk '{print $5, $9}')"
 
-          tar -czf "$ARCHIVE" \
-            --exclude='./.git' \
-            --exclude='./.github' \
-            --exclude='./builds' \
-            --exclude='./.cache' \
-            --exclude='./*.tar.gz' \
-            --exclude='./node_modules' \
-            .
-
-          echo "✓ Archive: $ARCHIVE ($(du -sh "$ARCHIVE" | cut -f1))"
-
-      # ── Generate changelog ────────────────────────────────
-      - name: Generate changelog
-        id: changelog
-        if: steps.check.outputs.EXISTS == 'false'
+      # ── Step 4: Changelog ─────────────────────────────────
+      - name: Changelog
+        id: log
+        if: steps.check.outputs.SKIP != 'true'
         run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null \
-            | grep -v "^${{ steps.version.outputs.VERSION }}$" \
-            | head -1 || echo "")
-
-          if [[ -n "$PREV_TAG" ]]; then
-            {
-              echo "CHANGES<<EOF"
-              git log "${PREV_TAG}..HEAD" --pretty=format:"- %s" | head -30
-              echo ""
-              echo "EOF"
-            } >> "$GITHUB_OUTPUT"
+          PREV=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [[ -n "$PREV" ]]; then
+            CHANGES=$(git log "${PREV}..HEAD" --pretty=format:"- %s" | head -20)
           else
-            echo "CHANGES=🎉 Initial release" >> "$GITHUB_OUTPUT"
+            CHANGES="Initial release"
           fi
+          {
+            echo "CHANGES<<EOF"
+            echo "$CHANGES"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
-      # ── Publish GitHub Release ────────────────────────────
-      - name: Create GitHub Release
-        if: steps.check.outputs.EXISTS == 'false'
+      # ── Step 5: Publish ───────────────────────────────────
+      - name: Publish
+        if: steps.check.outputs.SKIP != 'true'
         uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name:       "DNYFappbuilder ${{ steps.version.outputs.VERSION }}"
-          tag_name:   "${{ steps.version.outputs.VERSION }}"
-          prerelease: ${{ steps.version.outputs.IS_PRERELEASE == 'true' }}
-          generate_release_notes: false
+          tag_name:                ${{ steps.vars.outputs.VERSION }}
+          name:                    "DNYFappbuilder ${{ steps.vars.outputs.VERSION }}"
+          prerelease:              ${{ steps.vars.outputs.PRERELEASE == 'true' }}
+          draft:                   false
+          fail_on_unmatched_files: false
+          files:                   DNYFappbuilder-${{ steps.vars.outputs.VERSION }}.tar.gz
           body: |
             ## What's Changed
-
-            ${{ steps.changelog.outputs.CHANGES }}
+            ${{ steps.log.outputs.CHANGES }}
 
             ---
-
             ## Install
-
             ```bash
-            # One-liner — Linux / macOS / Termux
             curl -fsSL https://raw.githubusercontent.com/DNYFTETCH/DNYFappbuilder/main/install.sh | bash
             ```
-
+            **Termux**
             ```bash
-            # Termux (Android)
             pkg install git curl
             curl -fsSL https://raw.githubusercontent.com/DNYFTETCH/DNYFappbuilder/main/install.sh | bash
             ```
-
-            ## Quick Start
             ```bash
             abp doctor --fix
             abp init myapp flutter
             abp build myapp --target android --profile release --sign --install
             ```
-          files: "DNYFappbuilder-${{ steps.version.outputs.VERSION }}.tar.gz"
-          draft: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
